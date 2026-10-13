@@ -1,0 +1,259 @@
+import { useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useStore } from '@/store/useStore';
+import { useToast } from '@/store/useToast';
+import { Button } from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { ArrowLeft, Calendar, User, Link as LinkIcon, CheckCircle2, AlertCircle, Edit, Trash2 } from 'lucide-react';
+import { formatDate, cn } from '@/utils';
+import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+
+export function AssignmentDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { assignments, subjects, updateAssignment, deleteAssignment } = useStore();
+  const { addToast } = useToast();
+  
+  const [isEditExpOpen, setIsEditExpOpen] = useState(false);
+  const [isDeleteExpOpen, setIsDeleteExpOpen] = useState(false);
+
+  const assignment = assignments.find(a => a.id === id);
+  const subject = subjects.find(s => s.id === assignment?.subjectId);
+
+  if (!assignment || !subject) {
+    return <div className="p-8 text-center">Assignment not found</div>;
+  }
+
+  const handleDeleteExperiment = () => {
+    deleteAssignment(assignment.id);
+    addToast("Experiment deleted successfully.");
+    navigate(-1);
+  };
+
+  const checklist = assignment.checklist || {
+    moodleReceived: false,
+    experimentPerformed: false,
+    templatePrepared: false,
+    uploadedToMoodle: false,
+    facultyChecked: false
+  };
+
+  const completedCount = Object.values(checklist).filter(Boolean).length;
+  const progress = (completedCount / 5) * 100;
+
+  const toggleChecklist = (key: keyof typeof checklist) => {
+    const newChecklist = { ...checklist, [key]: !checklist[key] };
+    const newCompletedCount = Object.values(newChecklist).filter(Boolean).length;
+    
+    let newStatus = assignment.status;
+    if (newCompletedCount === 0) newStatus = 'NOT_STARTED';
+    else if (newCompletedCount === 5) newStatus = 'COMPLETED';
+    else if (assignment.status !== 'CORRECTION_REQUIRED') newStatus = 'IN_PROGRESS';
+
+    updateAssignment(assignment.id, { checklist: newChecklist, status: newStatus });
+  };
+
+  return (
+    <div className="space-y-8 pb-10">
+      <button 
+        onClick={() => navigate(-1)}
+        className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900 transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to Assignments
+      </button>
+
+      <div>
+        <div className="flex items-center gap-3 mb-2">
+          <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold uppercase tracking-wider bg-indigo-50 text-[var(--color-primary)]">
+            {subject.name}
+          </Badge>
+          <span className="text-slate-400 font-medium">—</span>
+          <span className="text-slate-600 font-medium">Experiment {assignment.experimentNumber}</span>
+        </div>
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <h1 className="text-4xl font-display font-bold tracking-tight text-slate-900">
+            {assignment.title}
+          </h1>
+          <div className="flex gap-3 shrink-0 flex-wrap">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsEditExpOpen(true)}>
+              <Edit className="h-4 w-4" /> Edit
+            </Button>
+            <Button variant="danger" size="sm" className="gap-2" onClick={() => setIsDeleteExpOpen(true)}>
+              <Trash2 className="h-4 w-4" /> Delete
+            </Button>
+            {completedCount < 5 && (
+              <Button 
+                onClick={() => {
+                  updateAssignment(assignment.id, { 
+                    status: 'COMPLETED',
+                    checklist: {
+                      moodleReceived: true,
+                      experimentPerformed: true,
+                      templatePrepared: true,
+                      uploadedToMoodle: true,
+                      facultyChecked: true
+                    }
+                  });
+                }} 
+                variant="outline" 
+                size="sm" 
+                className="gap-2 border-green-200 hover:bg-green-50 hover:text-green-700"
+              >
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                Mark as Completed
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <section>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-semibold text-slate-900">Assignment Checklist</h2>
+              {completedCount === 5 && (
+                <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                  Assignment workflow completed 🎉
+                </span>
+              )}
+            </div>
+            
+            <div className="mb-6">
+              <div className="flex justify-between text-xs font-semibold mb-1.5">
+                <span className="text-slate-500 uppercase tracking-wider">Assignment Progress</span>
+                <span className="text-slate-900">{completedCount} of 5 completed</span>
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+
+            {assignment.status === 'CORRECTION_REQUIRED' && assignment.facultyFeedback && (
+              <div className="mb-6 p-4 bg-red-50 rounded-lg border border-red-100 text-red-900 flex gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 text-red-600" />
+                <div>
+                  <p className="font-semibold text-sm mb-1 text-red-800">Faculty Feedback</p>
+                  <p className="text-sm">{assignment.facultyFeedback}</p>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {[
+                { key: 'moodleReceived', title: 'Moodle Assignment Received', desc: 'Assignment received from Moodle and requirements have been read.' },
+                { key: 'experimentPerformed', title: 'Experiment Performed', desc: 'Experiment has been completed.' },
+                { key: 'templatePrepared', title: 'Template Prepared', desc: 'Moodle upload template has been prepared.' },
+                { key: 'uploadedToMoodle', title: 'Uploaded to Moodle', desc: 'Experiment/template has been uploaded to Moodle.' },
+                { key: 'facultyChecked', title: 'Faculty Checked', desc: 'Experiment has been checked by the respective faculty.' }
+              ].map((item) => {
+                const isChecked = checklist[item.key as keyof typeof checklist];
+                return (
+                  <div 
+                    key={item.key}
+                    onClick={() => toggleChecklist(item.key as keyof typeof checklist)}
+                    className={cn(
+                      "group flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer",
+                      isChecked 
+                        ? "bg-slate-50/80 border-slate-200" 
+                        : "bg-white border-slate-200 hover:border-indigo-300 hover:shadow-sm"
+                    )}
+                  >
+                    <div className="mt-0.5 relative flex items-center justify-center shrink-0 w-5 h-5">
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked}
+                        onChange={() => {}} // Handled by parent div
+                        className="peer h-5 w-5 appearance-none rounded border-2 border-slate-300 checked:border-[var(--color-primary)] checked:bg-[var(--color-primary)] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-2"
+                        aria-label={item.title}
+                      />
+                      <CheckCircle2 className={cn("absolute pointer-events-none h-3.5 w-3.5 text-white transition-opacity", isChecked ? "opacity-100" : "opacity-0")} strokeWidth={4} />
+                    </div>
+                    <div>
+                      <h3 className={cn("text-base font-bold transition-colors", isChecked ? "text-slate-500 line-through decoration-slate-300" : "text-slate-900 group-hover:text-indigo-900")}>
+                        {item.title}
+                      </h3>
+                      <p className={cn("text-sm mt-0.5", isChecked ? "text-slate-400" : "text-slate-500")}>
+                        {item.desc}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+
+        <div className="space-y-6">
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              <div>
+                <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">Overview</p>
+                <p className="text-slate-700 text-sm leading-relaxed">{assignment.description}</p>
+              </div>
+              
+              <div className="space-y-4 pt-4 border-t border-slate-100">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    <Calendar className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-medium text-xs">Due Date</p>
+                    <p className="font-semibold text-slate-900">{formatDate(assignment.dueDate)}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                    <User className="h-4 w-4 text-slate-600" />
+                  </div>
+                  <div>
+                    <p className="text-slate-500 font-medium text-xs">Faculty</p>
+                    <p className="font-semibold text-slate-900">{assignment.faculty}</p>
+                  </div>
+                </div>
+              </div>
+
+              {assignment.moodleUrl && (
+                <div className="pt-4 border-t border-slate-100">
+                  <a 
+                    href={assignment.moodleUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm font-semibold transition-colors border border-slate-200"
+                  >
+                    <LinkIcon className="h-4 w-4" />
+                    Open in Moodle
+                  </a>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      <ExperimentFormModal 
+        isOpen={isEditExpOpen} 
+        onClose={() => setIsEditExpOpen(false)} 
+        assignmentToEdit={assignment}
+      />
+
+      <ConfirmationDialog
+        isOpen={isDeleteExpOpen}
+        onClose={() => setIsDeleteExpOpen(false)}
+        onConfirm={handleDeleteExperiment}
+        title="Delete Experiment"
+        message={
+          <>
+            <p>Are you sure you want to delete <strong>{assignment.title}</strong>?</p>
+            <p className="mt-2">This action cannot be undone and will permanently remove this experiment from your records.</p>
+          </>
+        }
+        confirmText="Delete Experiment"
+        isDestructive
+      />
+    </div>
+  );
+}

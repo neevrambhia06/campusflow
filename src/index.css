@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #3730a3; /* indigo-800 */
+  --color-primary-hover: #312e81; /* indigo-900 */
+  --color-secondary: #cbd5e1; /* slate-300 */
+  --color-success: #16a34a; /* green-600 */
+  --color-success-bg: #dcfce7; /* green-100 */
+  --color-warning: #d97706; /* amber-600 */
+  --color-warning-bg: #fef3c7; /* amber-100 */
+  --color-error: #dc2626; /* red-600 */
+  --color-error-bg: #fee2e2; /* red-100 */
+  --color-background: #fafaf9; /* stone-50 - warm white */
+  --color-surface: #ffffff;
+  --color-text-main: #0f172a; /* slate-900 */
+  --color-text-muted: #475569; /* slate-600 */
+  --color-border: #e2e8f0; /* slate-200 */
+  --color-border-hover: #cbd5e1; /* slate-300 */
+  
+  --font-sans: "DM Sans", sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  :root {
+    font-family: var(--font-sans);
+    color: var(--color-text-main);
+    background-color: var(--color-background);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+  
+  body {
+    @apply antialiased text-slate-900 bg-stone-50;
+  }
+}
+
+@layer utilities {
+  .shadow-soft {
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+  }
+  
+  .glass-effect {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+}
