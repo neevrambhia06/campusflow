@@ -2,22 +2,47 @@ import { useLayoutStore } from '@/store/useLayoutStore';
 import { useStore } from '@/store/useStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { PanelLeft, PanelTop, RotateCcw, Database, Smartphone, Monitor, CheckCircle2, AlertTriangle, RefreshCw } from 'lucide-react';
+import { 
+  PanelLeft, 
+  PanelTop, 
+  RotateCcw, 
+  Database, 
+  Smartphone, 
+  Monitor, 
+  CheckCircle2, 
+  AlertTriangle, 
+  RefreshCw, 
+  Bell, 
+  Send,
+  Check
+} from 'lucide-react';
 import { useToast } from '@/store/useToast';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { 
+  getNotificationPermission, 
+  requestNotificationPermission, 
+  sendTestNotification, 
+  NotificationPermissionState 
+} from '@/utils/notifications';
 
 export function SettingsPage() {
   const { 
     isSidebarHidden, 
     toggleSidebarHidden, 
     isTopbarHidden, 
-    toggleTopbarHidden,
+    toggleTopbarHidden, 
     resetLayout 
   } = useLayoutStore();
   
   const { subjects, assignments, syncStatus, error, refresh } = useStore();
   const { addToast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>(getNotificationPermission());
+  const [isTestingNotification, setIsTestingNotification] = useState(false);
+
+  useEffect(() => {
+    setNotificationPermission(getNotificationPermission());
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -29,14 +54,108 @@ export function SettingsPage() {
     }
   };
 
+  const handleEnableNotifications = async () => {
+    const res = await requestNotificationPermission();
+    setNotificationPermission(res);
+    if (res === 'granted') {
+      addToast("Device notifications enabled!");
+      await sendTestNotification();
+    } else if (res === 'denied') {
+      addToast("Notifications were blocked in your browser settings.");
+    }
+  };
+
+  const handleTestNotification = async () => {
+    setIsTestingNotification(true);
+    try {
+      const success = await sendTestNotification();
+      if (success) {
+        addToast("Test notification sent!");
+      } else {
+        addToast("Please allow notifications first.");
+      }
+    } finally {
+      setIsTestingNotification(false);
+    }
+  };
+
   return (
     <div className="space-y-8 pb-10">
       <div>
         <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Settings</h1>
-        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Manage your layout preferences and workspace settings.</p>
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Manage your layout preferences, device notifications, and workspace settings.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Device Notifications (PC & Mobile) */}
+        <Card className="md:col-span-2">
+          <CardHeader className="pb-3 border-b border-slate-100">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Bell className="h-5 w-5 text-indigo-600" />
+              Device Notifications (PC & Mobile)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 sm:p-6 space-y-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border bg-slate-50 border-slate-200">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-slate-900">Push Notifications for Deadlines</p>
+                  {notificationPermission === 'granted' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                      <Check className="h-3 w-3" /> Enabled
+                    </span>
+                  )}
+                  {notificationPermission === 'denied' && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-700 bg-red-100 px-2 py-0.5 rounded-full">
+                      Blocked
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600">
+                  Receive browser notifications when assignments are due today, due tomorrow, or overdue. Works on Windows, macOS, Android, and iOS.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {notificationPermission !== 'granted' ? (
+                  <Button
+                    onClick={handleEnableNotifications}
+                    className="gap-2 w-full sm:w-auto"
+                  >
+                    <Bell className="h-4 w-4" />
+                    Enable Notifications
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={handleTestNotification}
+                    disabled={isTestingNotification}
+                    className="gap-2 w-full sm:w-auto"
+                  >
+                    <Send className="h-4 w-4 text-indigo-600" />
+                    {isTestingNotification ? 'Sending…' : 'Send Test Notification'}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600">
+              <div className="p-3 bg-white rounded-lg border border-slate-100">
+                <p className="font-semibold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <Monitor className="h-3.5 w-3.5 text-slate-500" /> PC / Laptop Setup
+                </p>
+                <p>Allow notifications when prompted by your browser. Notifications will appear in your system notification center (Windows Action Center / macOS Notifications).</p>
+              </div>
+              <div className="p-3 bg-white rounded-lg border border-slate-100">
+                <p className="font-semibold text-slate-800 mb-1 flex items-center gap-1.5">
+                  <Smartphone className="h-3.5 w-3.5 text-slate-500" /> Mobile Setup
+                </p>
+                <p>On Android, tap Enable and allow permissions. On iOS Safari, tap Share → <em>Add to Home Screen</em> to receive full native push alerts.</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Navigation & Layout Display Options */}
         <Card>
           <CardHeader className="pb-3 border-b border-slate-100">

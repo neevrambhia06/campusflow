@@ -1,5 +1,6 @@
-import { Bell, Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose } from 'lucide-react';
+import { Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose } from 'lucide-react';
 import { useLayoutStore } from '@/store/useLayoutStore';
+import { NotificationDropdown } from './NotificationDropdown';
 import { cn } from '@/utils';
 
 export function Topbar() {
@@ -85,15 +86,8 @@ export function Topbar() {
           <span className="hidden sm:inline text-xs text-slate-600">Hide Navbar</span>
         </button>
 
-        {/* Notifications */}
-        <button 
-          type="button" 
-          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors relative"
-          aria-label="View notifications"
-        >
-          <Bell className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
-          <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
-        </button>
+        {/* Interactive Notifications Dropdown */}
+        <NotificationDropdown />
 
         {/* Avatar */}
         <div 
