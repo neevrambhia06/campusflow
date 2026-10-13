@@ -118,6 +118,7 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         status: 'NOT_STARTED',
         checklist: {
           moodleReceived: false,
+          experimentWritten: false,
           experimentPerformed: false,
           templatePrepared: false,
           uploadedToMoodle: false,

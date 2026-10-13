@@ -67,7 +67,7 @@ export function Submissions() {
                     </div>
                     {!isCompleted && (
                       <Badge variant={isCorrection ? "error" : "outline"} className="text-[10px] uppercase whitespace-nowrap ml-2">
-                        {isCorrection ? 'Correction' : `${Object.values(a.checklist || {}).filter(Boolean).length} / 5`}
+                        {isCorrection ? 'Correction' : `${Object.values(a.checklist || {}).filter(Boolean).length} / 6`}
                       </Badge>
                     )}
                   </Link>

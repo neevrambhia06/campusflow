@@ -9,6 +9,7 @@ import { ArrowLeft, Calendar, User, Link as LinkIcon, CheckCircle2, AlertCircle,
 import { formatDate, cn } from '@/utils';
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import type { Checklist } from '@/types';
 
 export function AssignmentDetail() {
   const { id } = useParams();
@@ -32,24 +33,28 @@ export function AssignmentDetail() {
     navigate(-1);
   };
 
-  const checklist = assignment.checklist || {
+  const TOTAL_CHECKLIST_ITEMS = 6;
+
+  const checklist: Checklist = {
     moodleReceived: false,
+    experimentWritten: false,
     experimentPerformed: false,
     templatePrepared: false,
     uploadedToMoodle: false,
-    facultyChecked: false
+    facultyChecked: false,
+    ...(assignment.checklist || {})
   };
 
   const completedCount = Object.values(checklist).filter(Boolean).length;
-  const progress = (completedCount / 5) * 100;
+  const progress = (completedCount / TOTAL_CHECKLIST_ITEMS) * 100;
 
-  const toggleChecklist = (key: keyof typeof checklist) => {
-    const newChecklist = { ...checklist, [key]: !checklist[key] };
+  const toggleChecklist = (key: keyof Checklist) => {
+    const newChecklist: Checklist = { ...checklist, [key]: !checklist[key] };
     const newCompletedCount = Object.values(newChecklist).filter(Boolean).length;
     
     let newStatus = assignment.status;
     if (newCompletedCount === 0) newStatus = 'NOT_STARTED';
-    else if (newCompletedCount === 5) newStatus = 'COMPLETED';
+    else if (newCompletedCount === TOTAL_CHECKLIST_ITEMS) newStatus = 'COMPLETED';
     else if (assignment.status !== 'CORRECTION_REQUIRED') newStatus = 'IN_PROGRESS';
 
     updateAssignment(assignment.id, { checklist: newChecklist, status: newStatus });
@@ -84,13 +89,14 @@ export function AssignmentDetail() {
             <Button variant="danger" size="sm" className="gap-2" onClick={() => setIsDeleteExpOpen(true)}>
               <Trash2 className="h-4 w-4" /> Delete
             </Button>
-            {completedCount < 5 && (
+            {completedCount < TOTAL_CHECKLIST_ITEMS && (
               <Button 
                 onClick={() => {
                   updateAssignment(assignment.id, { 
                     status: 'COMPLETED',
                     checklist: {
                       moodleReceived: true,
+                      experimentWritten: true,
                       experimentPerformed: true,
                       templatePrepared: true,
                       uploadedToMoodle: true,
@@ -115,7 +121,7 @@ export function AssignmentDetail() {
           <section>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-semibold text-slate-900">Assignment Checklist</h2>
-              {completedCount === 5 && (
+              {completedCount === TOTAL_CHECKLIST_ITEMS && (
                 <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
                   Assignment workflow completed 🎉
                 </span>
@@ -125,7 +131,7 @@ export function AssignmentDetail() {
             <div className="mb-6">
               <div className="flex justify-between text-xs font-semibold mb-1.5">
                 <span className="text-slate-500 uppercase tracking-wider">Assignment Progress</span>
-                <span className="text-slate-900">{completedCount} of 5 completed</span>
+                <span className="text-slate-900">{completedCount} of {TOTAL_CHECKLIST_ITEMS} completed</span>
               </div>
               <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                 <div className="h-full bg-[var(--color-primary)] rounded-full transition-all duration-500" style={{ width: `${progress}%` }} />
@@ -144,17 +150,18 @@ export function AssignmentDetail() {
 
             <div className="space-y-3">
               {[
-                { key: 'moodleReceived', title: 'Moodle Assignment Received', desc: 'Assignment received from Moodle and requirements have been read.' },
-                { key: 'experimentPerformed', title: 'Experiment Performed', desc: 'Experiment has been completed.' },
-                { key: 'templatePrepared', title: 'Template Prepared', desc: 'Moodle upload template has been prepared.' },
-                { key: 'uploadedToMoodle', title: 'Uploaded to Moodle', desc: 'Experiment/template has been uploaded to Moodle.' },
-                { key: 'facultyChecked', title: 'Faculty Checked', desc: 'Experiment has been checked by the respective faculty.' }
+                { key: 'moodleReceived' as const, title: 'Moodle Assignment Received', desc: 'Assignment received from Moodle and requirements have been read.' },
+                { key: 'experimentWritten' as const, title: 'Experiment Written', desc: 'Experiment write-up has been completed.' },
+                { key: 'experimentPerformed' as const, title: 'Experiment Performed', desc: 'Experiment has been completed.' },
+                { key: 'templatePrepared' as const, title: 'Template Prepared', desc: 'Moodle upload template has been prepared.' },
+                { key: 'uploadedToMoodle' as const, title: 'Uploaded to Moodle', desc: 'Experiment/template has been uploaded to Moodle.' },
+                { key: 'facultyChecked' as const, title: 'Faculty Checked', desc: 'Experiment has been checked by the respective faculty.' }
               ].map((item) => {
-                const isChecked = checklist[item.key as keyof typeof checklist];
+                const isChecked = checklist[item.key];
                 return (
                   <div 
                     key={item.key}
-                    onClick={() => toggleChecklist(item.key as keyof typeof checklist)}
+                    onClick={() => toggleChecklist(item.key)}
                     className={cn(
                       "group flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer",
                       isChecked 

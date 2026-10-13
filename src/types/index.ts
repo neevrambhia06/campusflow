@@ -21,6 +21,7 @@ export interface Subject {
 
 export interface Checklist {
   moodleReceived: boolean;
+  experimentWritten: boolean;
   experimentPerformed: boolean;
   templatePrepared: boolean;
   uploadedToMoodle: boolean;

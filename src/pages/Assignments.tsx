@@ -77,9 +77,17 @@ export function Assignments() {
           <div className="divide-y divide-slate-100">
             {filteredAssignments.map(a => {
               const subject = subjects.find(s => s.id === a.subjectId);
-              const checklist = a.checklist || { moodleReceived: false, experimentPerformed: false, templatePrepared: false, uploadedToMoodle: false, facultyChecked: false };
+              const checklist = {
+                moodleReceived: false,
+                experimentWritten: false,
+                experimentPerformed: false,
+                templatePrepared: false,
+                uploadedToMoodle: false,
+                facultyChecked: false,
+                ...(a.checklist || {})
+              };
               const completedCount = Object.values(checklist).filter(Boolean).length;
-              const progress = (completedCount / 5) * 100;
+              const progress = (completedCount / 6) * 100;
               
               return (
                 <Link 
@@ -116,7 +124,7 @@ export function Assignments() {
                     </div>
                     
                     <div className="w-32 flex flex-col items-end justify-center">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{completedCount} / 5 completed</p>
+                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">{completedCount} / 6 completed</p>
                       <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div className="h-full bg-[var(--color-primary)] rounded-full transition-all" style={{ width: `${progress}%` }} />
                       </div>
