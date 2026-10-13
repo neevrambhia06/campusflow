@@ -50,12 +50,12 @@ export function Dashboard() {
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
-      <div className="flex items-end justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-slate-900">Good morning, Neev</h1>
-          <p className="mt-2 text-slate-500">Here's what needs your attention today, {formatDate(today.toISOString())}.</p>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Good morning, Neev</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Here's what needs your attention today, {formatDate(today.toISOString())}.</p>
         </div>
-        <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+        <Button className="gap-2 w-full sm:w-auto shrink-0" onClick={() => setIsAddModalOpen(true)}>
           <Plus className="h-4 w-4" />
           Add Experiment
         </Button>
@@ -70,11 +70,11 @@ export function Dashboard() {
         {assignments.length === 0 ? (
           <div className="md:col-span-3">
             <Card className="bg-slate-50/50 border-dashed">
-              <CardContent className="p-16 text-center text-slate-500">
+              <CardContent className="p-8 sm:p-16 text-center text-slate-500">
                 <CheckCircle2 className="h-12 w-12 mx-auto text-green-400 mb-4" />
                 <p className="text-xl font-medium text-slate-700 mb-2">You're all caught up!</p>
                 <p className="text-sm mb-6">No assignments have been added yet.</p>
-                <Button className="gap-2" onClick={() => setIsAddModalOpen(true)}>
+                <Button className="gap-2 w-full sm:w-auto" onClick={() => setIsAddModalOpen(true)}>
                   <Plus className="h-4 w-4" />
                   Add Experiment
                 </Button>
@@ -95,29 +95,27 @@ export function Dashboard() {
                     const subject = subjects.find(s => s.id === a.subjectId);
                     return (
                       <Card key={a.id} className="hover:shadow-md transition-shadow border-l-4 border-l-[var(--color-primary)]">
-                        <CardContent className="p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-4">
-                            <div className={cn("w-2 h-10 rounded-full", subject?.color || "bg-slate-200")} />
-                            <div>
-                              <div className="flex items-center gap-2 mb-1">
-                                <span className="text-sm font-semibold text-slate-500">{subject?.name}</span>
+                        <CardContent className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div className={cn("w-2 h-10 rounded-full shrink-0", subject?.color || "bg-slate-200")} />
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                                <span className="text-xs sm:text-sm font-semibold text-slate-500 truncate">{subject?.name}</span>
                                 <span className="text-sm text-slate-400">•</span>
-                                <span className="text-sm font-medium text-slate-900">Experiment {a.experimentNumber}</span>
+                                <span className="text-xs sm:text-sm font-medium text-slate-900">Exp {a.experimentNumber}</span>
                               </div>
-                              <Link to={`/assignments/${a.id}`} className="text-base font-semibold text-[var(--color-primary)] hover:underline">
+                              <Link to={`/assignments/${a.id}`} className="text-sm sm:text-base font-semibold text-[var(--color-primary)] hover:underline block truncate">
                                 {a.title}
                               </Link>
                             </div>
                           </div>
-                          <div className="flex items-center gap-4 text-right">
-                            <div>
-                              <Badge variant={getStatusBadgeVariant(a.status)} className="mb-1 block w-max ml-auto">
-                                {WORKFLOW_STAGE_LABELS[a.status]}
-                              </Badge>
-                              <div className="text-xs text-slate-500 flex items-center justify-end gap-1">
-                                <Clock className="h-3 w-3" />
-                                {getDaysRemaining(a.dueDate)} days left
-                              </div>
+                          <div className="flex items-center justify-between sm:justify-end gap-3 text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+                            <Badge variant={getStatusBadgeVariant(a.status)} className="text-xs py-0.5">
+                              {WORKFLOW_STAGE_LABELS[a.status]}
+                            </Badge>
+                            <div className="text-xs text-slate-500 flex items-center justify-end gap-1 shrink-0">
+                              <Clock className="h-3 w-3" />
+                              {getDaysRemaining(a.dueDate)} days left
                             </div>
                           </div>
                         </CardContent>

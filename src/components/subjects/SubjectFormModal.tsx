@@ -90,18 +90,18 @@ export function SubjectFormModal({ isOpen, onClose, subjectToEdit }: SubjectForm
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col animate-fade-in">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-xl font-display font-bold text-slate-900">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
+          <h2 className="text-lg sm:text-xl font-display font-bold text-slate-900">
             {subjectToEdit ? 'Edit Subject' : 'Add Subject'}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
         
-        <div className="p-6 overflow-y-auto">
+        <div className="p-4 sm:p-6 overflow-y-auto">
           <form id="subject-form" onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold text-slate-700 mb-1">Subject Name <span className="text-red-500">*</span></label>
@@ -175,9 +175,9 @@ export function SubjectFormModal({ isOpen, onClose, subjectToEdit }: SubjectForm
           </form>
         </div>
         
-        <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-          <Button type="submit" form="subject-form">
+        <div className="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+          <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onClose}>Cancel</Button>
+          <Button type="submit" form="subject-form" className="w-full sm:w-auto">
             {subjectToEdit ? 'Save Changes' : 'Create Subject'}
           </Button>
         </div>

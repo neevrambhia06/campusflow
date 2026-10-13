@@ -7,6 +7,7 @@ import { Subjects } from './pages/Subjects';
 import { SubjectDetail } from './pages/SubjectDetail';
 import { CalendarPage } from './pages/Calendar';
 import { Submissions } from './pages/Submissions';
+import { SettingsPage } from './pages/Settings';
 
 function App() {
   return (
@@ -20,7 +21,7 @@ function App() {
           <Route path="subjects/:id" element={<SubjectDetail />} />
           <Route path="calendar" element={<CalendarPage />} />
           <Route path="submissions" element={<Submissions />} />
-          <Route path="settings" element={<div className="p-8 text-center text-slate-500">Settings page coming soon.</div>} />
+          <Route path="settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

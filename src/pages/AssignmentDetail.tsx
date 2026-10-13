@@ -79,14 +79,14 @@ export function AssignmentDetail() {
           <span className="text-slate-600 font-medium">Experiment {assignment.experimentNumber}</span>
         </div>
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-          <h1 className="text-4xl font-display font-bold tracking-tight text-slate-900">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-display font-bold tracking-tight text-slate-900">
             {assignment.title}
           </h1>
-          <div className="flex gap-3 shrink-0 flex-wrap">
-            <Button variant="outline" size="sm" className="gap-2" onClick={() => setIsEditExpOpen(true)}>
+          <div className="flex gap-2 sm:gap-3 shrink-0 flex-wrap w-full sm:w-auto">
+            <Button variant="outline" size="sm" className="gap-2 flex-1 sm:flex-initial justify-center" onClick={() => setIsEditExpOpen(true)}>
               <Edit className="h-4 w-4" /> Edit
             </Button>
-            <Button variant="danger" size="sm" className="gap-2" onClick={() => setIsDeleteExpOpen(true)}>
+            <Button variant="danger" size="sm" className="gap-2 flex-1 sm:flex-initial justify-center" onClick={() => setIsDeleteExpOpen(true)}>
               <Trash2 className="h-4 w-4" /> Delete
             </Button>
             {completedCount < TOTAL_CHECKLIST_ITEMS && (
@@ -106,7 +106,7 @@ export function AssignmentDetail() {
                 }} 
                 variant="outline" 
                 size="sm" 
-                className="gap-2 border-green-200 hover:bg-green-50 hover:text-green-700"
+                className="gap-2 border-green-200 hover:bg-green-50 hover:text-green-700 w-full sm:w-auto justify-center"
               >
                 <CheckCircle2 className="h-4 w-4 text-green-600" />
                 Mark as Completed
@@ -116,13 +116,13 @@ export function AssignmentDetail() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8">
           <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-slate-900">Assignment Checklist</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Assignment Checklist</h2>
               {completedCount === TOTAL_CHECKLIST_ITEMS && (
-                <span className="text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200">
+                <span className="text-xs sm:text-sm font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full border border-green-200 w-max">
                   Assignment workflow completed 🎉
                 </span>
               )}

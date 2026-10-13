@@ -1,27 +1,105 @@
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose } from 'lucide-react';
+import { useLayoutStore } from '@/store/useLayoutStore';
+import { cn } from '@/utils';
 
 export function Topbar() {
+  const { 
+    toggleMobileSidebar, 
+    isSidebarHidden, 
+    toggleSidebarHidden, 
+    toggleTopbarHidden 
+  } = useLayoutStore();
+
   return (
-    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-8">
-      <div className="flex flex-1">
-        <div className="w-full max-w-lg relative">
+    <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 shrink-0 transition-all gap-2 sm:gap-4 z-20">
+      {/* Left section: Mobile menu button / Desktop sidebar toggle & Brand */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Mobile Hamburger Button */}
+        <button
+          type="button"
+          onClick={toggleMobileSidebar}
+          className="md:hidden p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          aria-label="Open mobile menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        {/* Mobile Brand (visible when sidebar is hidden on mobile) */}
+        <div className="flex items-center gap-2 md:hidden">
+          <div className="w-7 h-7 rounded-lg bg-[var(--color-primary)] flex items-center justify-center text-white font-bold text-sm shadow-xs">
+            C
+          </div>
+          <span className="font-display font-bold text-slate-900 text-lg">CampusFlow</span>
+        </div>
+
+        {/* Desktop Sidebar Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleSidebarHidden}
+          className={cn(
+            "hidden md:flex items-center gap-1.5 p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]",
+            isSidebarHidden && "bg-indigo-50 text-[var(--color-primary)] hover:bg-indigo-100 font-semibold"
+          )}
+          title={isSidebarHidden ? "Show Sidebar" : "Hide Sidebar"}
+          aria-label={isSidebarHidden ? "Show Sidebar" : "Hide Sidebar"}
+        >
+          {isSidebarHidden ? (
+            <>
+              <PanelLeftOpen className="h-4 w-4" />
+              <span className="hidden lg:inline text-xs">Show Sidebar</span>
+            </>
+          ) : (
+            <>
+              <PanelLeftClose className="h-4 w-4" />
+              <span className="hidden lg:inline text-xs text-slate-600">Hide Sidebar</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Center: Search Bar */}
+      <div className="flex-1 max-w-md mx-2">
+        <div className="w-full relative">
           <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
             <Search className="h-4 w-4 text-slate-400" aria-hidden="true" />
           </div>
           <input
             type="search"
-            className="block w-full rounded-md border-0 py-2 pl-10 pr-3 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-[var(--color-primary)] sm:text-sm sm:leading-6 bg-slate-50 transition-all hover:bg-slate-100/50"
-            placeholder="Search assignments, subjects..."
+            className="block w-full rounded-lg border-0 py-1.5 sm:py-2 pl-9 sm:pl-10 pr-3 text-slate-900 ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-[var(--color-primary)] text-xs sm:text-sm bg-slate-50 transition-all hover:bg-slate-100/50"
+            placeholder="Search assignments..."
           />
         </div>
       </div>
-      <div className="flex items-center gap-4">
-        <button type="button" className="text-slate-400 hover:text-slate-500 relative">
-          <span className="sr-only">View notifications</span>
-          <Bell className="h-5 w-5" aria-hidden="true" />
-          <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+
+      {/* Right Actions: Hide Navbar (Focus mode), Notifications & Avatar */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        {/* Hide Navbar (Focus Mode) Button */}
+        <button
+          type="button"
+          onClick={toggleTopbarHidden}
+          className="flex items-center gap-1.5 p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition-colors text-xs font-medium focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+          title="Hide Navbar (Focus Mode)"
+          aria-label="Hide Navbar"
+        >
+          <PanelTopClose className="h-4 w-4 text-slate-500" />
+          <span className="hidden sm:inline text-xs text-slate-600">Hide Navbar</span>
         </button>
-        <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm">
+
+        {/* Notifications */}
+        <button 
+          type="button" 
+          className="p-2 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors relative"
+          aria-label="View notifications"
+        >
+          <Bell className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+          <span className="absolute top-1.5 right-1.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" />
+        </button>
+
+        {/* Avatar */}
+        <div 
+          className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs sm:text-sm shrink-0 border border-indigo-200"
+          title="Neev Rambhia"
+        >
           N
         </div>
       </div>

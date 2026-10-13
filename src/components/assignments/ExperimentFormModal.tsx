@@ -134,18 +134,18 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
       <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
-        <div className="flex items-center justify-between p-6 border-b border-slate-100">
-          <h2 className="text-xl font-display font-bold text-slate-900">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-100">
+          <h2 className="text-lg sm:text-xl font-display font-bold text-slate-900">
             {assignmentToEdit ? 'Edit Experiment' : 'Add Experiment'}
           </h2>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+          <button onClick={onClose} className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
             <X className="h-5 w-5" />
           </button>
         </div>
         
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 overflow-y-auto flex-1">
           {subjects.length === 0 ? (
             <div className="text-center py-10">
               <p className="text-slate-900 font-semibold mb-2">No subjects available.</p>
@@ -290,9 +290,9 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         </div>
         
         {subjects.length > 0 && (
-          <div className="p-6 border-t border-slate-100 bg-slate-50 flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button type="submit" form="experiment-form">
+          <div className="p-4 sm:p-6 border-t border-slate-100 bg-slate-50 flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3">
+            <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={onClose}>Cancel</Button>
+            <Button type="submit" form="experiment-form" className="w-full sm:w-auto">
               {assignmentToEdit ? 'Save Changes' : 'Create Experiment'}
             </Button>
           </div>

@@ -83,13 +83,13 @@ export function Submissions() {
   return (
     <div className="space-y-10 pb-10">
       <div>
-        <h1 className="text-3xl font-display font-bold tracking-tight text-slate-900">Submissions</h1>
-        <p className="mt-2 text-slate-500">Track your readiness for mid-term and final journal submissions.</p>
+        <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Submissions</h1>
+        <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Track your readiness for mid-term and final journal submissions.</p>
       </div>
 
       {assignments.length === 0 ? (
-        <div className="p-16 text-center text-slate-500 bg-white rounded-xl border border-slate-100 shadow-soft">
-          <p className="text-xl font-medium text-slate-700 mb-2">No experiments available for submission tracking yet.</p>
+        <div className="p-8 sm:p-16 text-center text-slate-500 bg-white rounded-xl border border-slate-100 shadow-soft">
+          <p className="text-lg sm:text-xl font-medium text-slate-700 mb-2">No experiments available for submission tracking yet.</p>
           <p className="text-sm">Create subjects and experiments first.</p>
         </div>
       ) : (

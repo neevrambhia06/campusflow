@@ -15,10 +15,10 @@ export function Subjects() {
     <div className="space-y-8 pb-10">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold tracking-tight text-slate-900">Subjects</h1>
-          <p className="mt-2 text-slate-500">Manage your course workload.</p>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Subjects</h1>
+          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Manage your course workload.</p>
         </div>
-        <Button className="gap-2 shrink-0" onClick={() => setIsAddModalOpen(true)}>
+        <Button className="gap-2 w-full sm:w-auto shrink-0" onClick={() => setIsAddModalOpen(true)}>
           <Plus className="h-4 w-4" />
           Add Subject
         </Button>
