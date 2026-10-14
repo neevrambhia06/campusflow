@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useStore } from '@/store/useStore';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MagicBentoGrid, MagicBentoCard } from '@/components/ui/MagicBento';
+import { Plus, Clock, CheckCircle2, AlertCircle, Calendar, Layers } from 'lucide-react';
 import { formatDate, getDaysRemaining, cn } from '@/utils';
 import { WORKFLOW_STAGE_LABELS, WorkflowStage } from '@/types';
 import { Link } from 'react-router-dom';
@@ -24,6 +25,7 @@ const getStatusBadgeVariant = (status: WorkflowStage) => {
 
 export function Dashboard() {
   const { assignments, subjects } = useStore();
+  const { user } = useAuth();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const today = new Date();
@@ -47,15 +49,28 @@ export function Dashboard() {
     return acc;
   }, {} as Record<string, number>);
 
+  const studentName = user?.name || 'Neev';
+
   return (
     <div className="space-y-8 pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Good morning, Neev</h1>
-          <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Here's what needs your attention today, {formatDate(today.toISOString())}.</p>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">
+              Academic Dashboard
+            </span>
+            <span className="text-xs text-slate-400">•</span>
+            <span className="text-xs text-slate-500 font-medium">Realtime Cloud Sync Active</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">
+            Good morning, {studentName}
+          </h1>
+          <p className="mt-1 sm:mt-1.5 text-sm sm:text-base text-slate-500">
+            Here's what needs your attention today, {formatDate(today.toISOString())}.
+          </p>
         </div>
-        <Button className="gap-2 w-full sm:w-auto shrink-0" onClick={() => setIsAddModalOpen(true)}>
+        <Button className="gap-2 w-full sm:w-auto shrink-0 shadow-sm" onClick={() => setIsAddModalOpen(true)}>
           <Plus className="h-4 w-4" />
           Add Experiment
         </Button>
@@ -66,191 +81,215 @@ export function Dashboard() {
         onClose={() => setIsAddModalOpen(false)} 
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {assignments.length === 0 ? (
-          <div className="md:col-span-3">
-            <Card className="bg-slate-50/50 border-dashed">
-              <CardContent className="p-8 sm:p-16 text-center text-slate-500">
-                <CheckCircle2 className="h-12 w-12 mx-auto text-green-400 mb-4" />
-                <p className="text-xl font-medium text-slate-700 mb-2">You're all caught up!</p>
-                <p className="text-sm mb-6">No assignments have been added yet.</p>
-                <Button className="gap-2 w-full sm:w-auto" onClick={() => setIsAddModalOpen(true)}>
-                  <Plus className="h-4 w-4" />
-                  Add Experiment
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        ) : (
-          <>
-            {/* Today's Focus - takes 2 columns */}
-            <div className="md:col-span-2 space-y-6">
-              <section>
-                <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-                  <AlertCircle className="h-5 w-5 text-amber-500" />
-                  Action Required
-                </h2>
-                <div className="space-y-3">
-                  {attentionNeeded.length > 0 ? attentionNeeded.map(a => {
-                    const subject = subjects.find(s => s.id === a.subjectId);
-                    return (
-                      <Card key={a.id} className="hover:shadow-md transition-shadow border-l-4 border-l-[var(--color-primary)]">
-                        <CardContent className="p-3.5 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                            <div className={cn("w-2 h-10 rounded-full shrink-0", subject?.color || "bg-slate-200")} />
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                                <span className="text-xs sm:text-sm font-semibold text-slate-500 truncate">{subject?.name}</span>
-                                <span className="text-sm text-slate-400">•</span>
-                                <span className="text-xs sm:text-sm font-medium text-slate-900">Exp {a.experimentNumber}</span>
-                              </div>
-                              <Link to={`/assignments/${a.id}`} className="text-sm sm:text-base font-semibold text-[var(--color-primary)] hover:underline block truncate">
-                                {a.title}
-                              </Link>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between sm:justify-end gap-3 text-left sm:text-right pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
-                            <Badge variant={getStatusBadgeVariant(a.status)} className="text-xs py-0.5">
-                              {WORKFLOW_STAGE_LABELS[a.status]}
-                            </Badge>
-                            <div className="text-xs text-slate-500 flex items-center justify-end gap-1 shrink-0">
-                              <Clock className="h-3 w-3" />
-                              {getDaysRemaining(a.dueDate)} days left
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    )
-                  }) : (
-                    <Card className="bg-slate-50/50 border-dashed">
-                      <CardContent className="p-8 text-center text-slate-500">
-                        <CheckCircle2 className="h-8 w-8 mx-auto text-green-400 mb-3" />
-                        <p className="font-medium text-slate-700">You're all caught up! 🎉</p>
-                        <p className="text-sm mt-1">No experiments currently need your attention.</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                </div>
-              </section>
+      {assignments.length === 0 ? (
+        <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-8 sm:p-16 text-center text-slate-500 shadow-xs">
+          <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4 animate-bounce" />
+          <p className="text-xl font-bold text-slate-800 mb-2">You're all caught up!</p>
+          <p className="text-sm mb-6 max-w-md mx-auto text-slate-500">
+            No assignments have been added yet. Add your first college experiment to start tracking its full submission cycle.
+          </p>
+          <Button className="gap-2 w-full sm:w-auto" onClick={() => setIsAddModalOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Add Experiment
+          </Button>
+        </div>
+      ) : (
+        /* React Bits Magic Bento Grid Layout */
+        <MagicBentoGrid>
+          {/* Card 1: Action Required Today (Large 2-column bento card) */}
+          <MagicBentoCard
+            colSpan="md:col-span-2 lg:col-span-2"
+            title="Action Required Today"
+            description="Experiments needing immediate write-up, template preparation, or correction."
+            badge={`${attentionNeeded.length} Pending`}
+            badgeColor={attentionNeeded.length > 0 ? "bg-amber-50 text-amber-800 border-amber-200" : "bg-emerald-50 text-emerald-800 border-emerald-200"}
+            icon={<AlertCircle className="h-5 w-5 text-amber-500" />}
+          >
+            <div className="mt-2 space-y-3">
+              {attentionNeeded.length > 0 ? (
+                attentionNeeded.map((a) => {
+                  const subject = subjects.find((s) => s.id === a.subjectId);
+                  const daysLeft = getDaysRemaining(a.dueDate);
 
-              <section>
-                <h2 className="text-lg font-semibold text-slate-900 mb-4">Workflow Overview</h2>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-                      {[
-                        { key: 'NOT_STARTED', color: 'bg-slate-200 text-slate-700' },
-                        { key: 'IN_PROGRESS', color: 'bg-blue-100 text-blue-700' },
-                        { key: 'READY_FOR_UPLOAD', color: 'bg-amber-100 text-amber-700' },
-                        { key: 'UPLOADED', color: 'bg-indigo-100 text-indigo-700' },
-                        { key: 'FACULTY_CHECKING', color: 'bg-purple-100 text-purple-700' },
-                        { key: 'CORRECTION_REQUIRED', color: 'bg-red-100 text-red-700' },
-                      ].map((stage) => (
-                        <div key={stage.key} className="flex flex-col items-center flex-1 min-w-[80px]">
-                          <div className={cn("w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mb-2", stage.color)}>
-                            {workflowCounts[stage.key] || 0}
+                  return (
+                    <div
+                      key={a.id}
+                      className="p-3.5 sm:p-4 rounded-xl border border-slate-200/90 bg-white hover:border-indigo-300 hover:shadow-xs transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 group"
+                    >
+                      <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div
+                          className={cn(
+                            'w-2 h-10 rounded-full shrink-0',
+                            subject?.color || 'bg-slate-300'
+                          )}
+                        />
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5 flex-wrap">
+                            <span className="text-xs sm:text-sm font-semibold text-slate-500 truncate">
+                              {subject?.name}
+                            </span>
+                            <span className="text-slate-300">•</span>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-900">
+                              Exp {a.experimentNumber}
+                            </span>
                           </div>
-                          <span className="text-[10px] uppercase font-bold text-slate-500 text-center tracking-wider h-8">
-                            {stage.key.replace(/_/g, ' ')}
-                          </span>
+                          <Link
+                            to={`/assignments/${a.id}`}
+                            className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors block truncate"
+                          >
+                            {a.title}
+                          </Link>
                         </div>
-                      ))}
+                      </div>
+
+                      <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 shrink-0">
+                        <Badge variant={getStatusBadgeVariant(a.status)} className="text-xs py-0.5">
+                          {WORKFLOW_STAGE_LABELS[a.status]}
+                        </Badge>
+                        <div className={`text-xs font-semibold flex items-center justify-end gap-1 shrink-0 ${
+                          daysLeft < 0 ? 'text-red-600' : daysLeft === 0 ? 'text-amber-600' : 'text-slate-500'
+                        }`}>
+                          <Clock className="h-3 w-3" />
+                          <span>{daysLeft < 0 ? `${Math.abs(daysLeft)}d overdue` : `${daysLeft}d left`}</span>
+                        </div>
+                      </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </section>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center bg-slate-50/70 rounded-xl border border-slate-100">
+                  <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
+                  <p className="font-semibold text-slate-800 text-sm">You're all caught up! 🎉</p>
+                  <p className="text-xs text-slate-500 mt-0.5">No experiments currently require urgent action.</p>
+                </div>
+              )}
             </div>
+          </MagicBentoCard>
 
-            {/* Right sidebar */}
-            <div className="space-y-6">
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle>Academic Progress</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex justify-between items-end mb-2">
-                    <div className="text-3xl font-display font-bold text-slate-900">{completedAssignments.length}</div>
-                    <div className="text-sm font-medium text-slate-500 mb-1">/ {assignments.length} total</div>
-                  </div>
-                  <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-4">
-                    <div 
-                      className="h-full bg-green-500 rounded-full" 
-                      style={{ width: `${assignments.length ? (completedAssignments.length / assignments.length) * 100 : 0}%` }} 
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-100">
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Pending</p>
-                      <p className="text-xl font-semibold text-slate-900">{pendingAssignments.length}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold mb-1">Overdue</p>
-                      <p className="text-xl font-semibold text-red-600">
-                        {assignments.filter(a => getDaysRemaining(a.dueDate) < 0 && a.status !== 'COMPLETED').length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+          {/* Card 2: Academic Progress & Stats */}
+          <MagicBentoCard
+            title="Academic Progress"
+            description="Overall completion across active semester courses."
+            badge={`${Math.round(assignments.length ? (completedAssignments.length / assignments.length) * 100 : 0)}%`}
+            icon={<CheckCircle2 className="h-5 w-5 text-emerald-600" />}
+          >
+            <div className="mt-2 flex flex-col justify-between h-full">
+              <div>
+                <div className="flex justify-between items-baseline mb-2">
+                  <span className="text-3xl font-display font-black text-slate-900">
+                    {completedAssignments.length}
+                  </span>
+                  <span className="text-xs font-semibold text-slate-400">
+                    of {assignments.length} total experiments
+                  </span>
+                </div>
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden mb-5">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                    style={{
+                      width: `${assignments.length ? (completedAssignments.length / assignments.length) * 100 : 0}%`,
+                    }}
+                  />
+                </div>
+              </div>
 
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle>Upcoming Deadlines</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {upcomingDeadlines.length > 0 ? (
-                    <div className="space-y-4">
-                      {upcomingDeadlines.slice(0, 4).map(a => {
-                        const subject = subjects.find(s => s.id === a.subjectId);
-                        return (
-                          <div key={a.id} className="flex items-start gap-3">
-                            <div className={cn("w-10 h-10 rounded-lg flex flex-col items-center justify-center shrink-0", subject?.color || 'bg-slate-200', "text-white")}>
-                              <span className="text-[10px] font-bold uppercase">{new Date(a.dueDate).toLocaleString('en-US', { month: 'short' })}</span>
-                              <span className="text-sm font-bold leading-none">{new Date(a.dueDate).getDate()}</span>
-                            </div>
-                            <div>
-                              <p className="text-sm font-semibold text-slate-900 line-clamp-1">{a.title}</p>
-                              <p className="text-xs text-slate-500">{subject?.name} - Exp {a.experimentNumber}</p>
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-slate-500 text-center py-4">No deadlines in the next 7 days.</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle>Submission Readiness</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm font-medium mb-2">
-                      <span className="text-slate-700">Mid-Term</span>
-                      <span className="text-slate-900">{completedAssignments.length} / {Math.ceil(assignments.length / 2) || 0}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${Math.min(100, (completedAssignments.length / Math.ceil(assignments.length / 2)) * 100) || 0}%` }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm font-medium mb-2">
-                      <span className="text-slate-700">Final</span>
-                      <span className="text-slate-900">{completedAssignments.length} / {assignments.length}</span>
-                    </div>
-                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 rounded-full opacity-50" style={{ width: `${assignments.length ? (completedAssignments.length / assignments.length) * 100 : 0}%` }} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-100">
+                <div className="p-3 bg-slate-50 rounded-xl">
+                  <p className="text-[10px] text-slate-400 uppercase tracking-wider font-bold">Pending</p>
+                  <p className="text-lg font-bold text-slate-800 mt-0.5">{pendingAssignments.length}</p>
+                </div>
+                <div className="p-3 bg-red-50/60 rounded-xl">
+                  <p className="text-[10px] text-red-500 uppercase tracking-wider font-bold">Overdue</p>
+                  <p className="text-lg font-bold text-red-600 mt-0.5">
+                    {assignments.filter(a => getDaysRemaining(a.dueDate) < 0 && a.status !== 'COMPLETED').length}
+                  </p>
+                </div>
+              </div>
             </div>
-          </>
-        )}
-      </div>
+          </MagicBentoCard>
+
+          {/* Card 3: Workflow Stage Overview */}
+          <MagicBentoCard
+            colSpan="md:col-span-2 lg:col-span-2"
+            title="Workflow Stage Distribution"
+            description="Realtime count of experiments in each submission phase."
+            badge="Live Status"
+            icon={<Layers className="h-5 w-5 text-indigo-600" />}
+          >
+            <div className="mt-3 grid grid-cols-3 sm:grid-cols-6 gap-2 pt-2">
+              {[
+                { key: 'NOT_STARTED', label: 'Received', color: 'bg-slate-100 text-slate-700 border-slate-200' },
+                { key: 'IN_PROGRESS', label: 'In Progress', color: 'bg-blue-50 text-blue-700 border-blue-200' },
+                { key: 'READY_FOR_UPLOAD', label: 'Template', color: 'bg-amber-50 text-amber-700 border-amber-200' },
+                { key: 'UPLOADED', label: 'Uploaded', color: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+                { key: 'FACULTY_CHECKING', label: 'Checking', color: 'bg-purple-50 text-purple-700 border-purple-200' },
+                { key: 'CORRECTION_REQUIRED', label: 'Correction', color: 'bg-red-50 text-red-700 border-red-200' },
+              ].map((stage) => (
+                <div
+                  key={stage.key}
+                  className={`p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all hover:scale-105 ${stage.color}`}
+                >
+                  <span className="text-xl sm:text-2xl font-black">
+                    {workflowCounts[stage.key] || 0}
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider mt-1 line-clamp-1">
+                    {stage.label}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </MagicBentoCard>
+
+          {/* Card 4: Upcoming Deadlines This Week */}
+          <MagicBentoCard
+            title="Upcoming Deadlines"
+            description="Experiments due within the next 7 days."
+            badge="Next 7 Days"
+            icon={<Calendar className="h-5 w-5 text-indigo-600" />}
+          >
+            <div className="mt-2 space-y-3">
+              {upcomingDeadlines.length > 0 ? (
+                upcomingDeadlines.slice(0, 3).map((a) => {
+                  const subject = subjects.find((s) => s.id === a.subjectId);
+                  return (
+                    <Link
+                      key={a.id}
+                      to={`/assignments/${a.id}`}
+                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group block"
+                    >
+                      <div
+                        className={cn(
+                          'w-9 h-9 rounded-xl flex flex-col items-center justify-center shrink-0 text-white shadow-2xs',
+                          subject?.color || 'bg-slate-400'
+                        )}
+                      >
+                        <span className="text-[9px] font-bold uppercase leading-none">
+                          {new Date(a.dueDate).toLocaleString('en-US', { month: 'short' })}
+                        </span>
+                        <span className="text-xs font-black leading-none mt-0.5">
+                          {new Date(a.dueDate).getDate()}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition-colors truncate">
+                          {a.title}
+                        </p>
+                        <p className="text-[11px] text-slate-500 truncate">
+                          {subject?.name} · Exp {a.experimentNumber}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })
+              ) : (
+                <p className="text-xs text-slate-400 text-center py-6">
+                  No upcoming deadlines in the next 7 days.
+                </p>
+              )}
+            </div>
+          </MagicBentoCard>
+        </MagicBentoGrid>
+      )}
     </div>
   );
 }

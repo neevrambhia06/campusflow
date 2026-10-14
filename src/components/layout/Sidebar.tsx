@@ -1,11 +1,22 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Layers, Calendar, CheckSquare, Settings, X, PanelLeftClose } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  Layers, 
+  Calendar, 
+  CheckSquare, 
+  Settings, 
+  X, 
+  PanelLeftClose,
+  Home
+} from 'lucide-react';
 import { cn } from '@/utils';
 import { useLayoutStore } from '@/store/useLayoutStore';
+import { useAuth } from '@/context/AuthContext';
 import { useEffect } from 'react';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Assignments', href: '/assignments', icon: BookOpen },
   { name: 'Subjects', href: '/subjects', icon: Layers },
   { name: 'Calendar', href: '/calendar', icon: Calendar },
@@ -15,7 +26,11 @@ const navigation = [
 
 export function Sidebar() {
   const { isMobileSidebarOpen, setMobileSidebarOpen, isSidebarHidden, toggleSidebarHidden } = useLayoutStore();
+  const { user } = useAuth();
   const location = useLocation();
+
+  const studentName = user?.name || 'Neev Rambhia';
+  const initial = studentName.charAt(0).toUpperCase();
 
   // Close mobile drawer on route change
   useEffect(() => {
@@ -23,36 +38,50 @@ export function Sidebar() {
   }, [location.pathname, setMobileSidebarOpen]);
 
   const navLinks = (
-    <nav className="space-y-1">
-      {navigation.map((item) => (
+    <div className="space-y-6">
+      <nav className="space-y-1">
+        {navigation.map((item) => (
+          <NavLink
+            key={item.name}
+            to={item.href}
+            onClick={() => setMobileSidebarOpen(false)}
+            className={({ isActive }) =>
+              cn(
+                'group flex items-center px-3.5 py-2.5 text-sm font-semibold rounded-xl transition-all',
+                isActive
+                  ? 'bg-indigo-50 text-[var(--color-primary)] font-bold shadow-xs'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              )
+            }
+          >
+            {({ isActive }) => (
+              <>
+                <item.icon
+                  className={cn(
+                    'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
+                    isActive ? 'text-[var(--color-primary)]' : 'text-slate-400 group-hover:text-slate-600'
+                  )}
+                  aria-hidden="true"
+                />
+                <span>{item.name}</span>
+              </>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+
+      {/* Landing Page link */}
+      <div className="pt-4 border-t border-slate-100">
         <NavLink
-          key={item.name}
-          to={item.href}
+          to="/"
           onClick={() => setMobileSidebarOpen(false)}
-          className={({ isActive }) =>
-            cn(
-              'group flex items-center px-3.5 py-2.5 text-sm font-medium rounded-xl transition-all',
-              isActive
-                ? 'bg-indigo-50 text-[var(--color-primary)] font-semibold shadow-xs'
-                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
-            )
-          }
+          className="group flex items-center px-3.5 py-2 text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
         >
-          {({ isActive }) => (
-            <>
-              <item.icon
-                className={cn(
-                  'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
-                  isActive ? 'text-[var(--color-primary)]' : 'text-slate-400 group-hover:text-slate-600'
-                )}
-                aria-hidden="true"
-              />
-              <span>{item.name}</span>
-            </>
-          )}
+          <Home className="mr-3 h-4 w-4 text-slate-400 group-hover:text-indigo-500" />
+          <span>Home Landing Page</span>
         </NavLink>
-      ))}
-    </nav>
+      </div>
+    </div>
   );
 
   return (
@@ -95,12 +124,22 @@ export function Sidebar() {
 
         <div className="p-4 border-t border-slate-100 bg-slate-50/50">
           <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
-              N
-            </div>
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={studentName}
+                className="h-9 w-9 rounded-full object-cover border border-indigo-200"
+              />
+            ) : (
+              <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shrink-0">
+                {initial}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold text-slate-900 truncate">Neev Rambhia</p>
-              <p className="text-xs text-slate-500 truncate">Academic Workflow</p>
+              <p className="text-sm font-semibold text-slate-900 truncate">{studentName}</p>
+              <p className="text-xs text-slate-500 truncate">
+                {user?.isGuest ? 'Guest Session' : user?.email || 'Academic Account'}
+              </p>
             </div>
           </div>
         </div>
@@ -134,10 +173,23 @@ export function Sidebar() {
           {navLinks}
         </div>
 
-        <div className="p-4 border-t border-slate-100 shrink-0 bg-slate-50/30">
-          <div className="flex items-center justify-between text-xs text-slate-400">
-            <span>Academic Tracker</span>
-            <span className="font-mono text-[10px] bg-slate-100 px-1.5 py-0.5 rounded text-slate-500 font-semibold">LIGHT</span>
+        <div className="p-4 border-t border-slate-100 shrink-0 bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={studentName}
+                className="h-8 w-8 rounded-full object-cover border border-indigo-200"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs shrink-0">
+                {initial}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-bold text-slate-900 truncate">{studentName}</p>
+              <p className="text-[10px] text-slate-400 truncate">Academic Workflow</p>
+            </div>
           </div>
         </div>
       </aside>

@@ -1,6 +1,10 @@
-import { Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose, LogOut, Sparkles, LogIn, ExternalLink } from 'lucide-react';
 import { useLayoutStore } from '@/store/useLayoutStore';
+import { useAuth } from '@/context/AuthContext';
 import { NotificationDropdown } from './NotificationDropdown';
+import { LoginModal } from '@/components/auth/LoginModal';
+import { Link } from 'react-router-dom';
 import { cn } from '@/utils';
 
 export function Topbar() {
@@ -10,6 +14,26 @@ export function Topbar() {
     toggleSidebarHidden, 
     toggleTopbarHidden 
   } = useLayoutStore();
+
+  const { user, isAuthenticated, signOut } = useAuth();
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+    if (isUserMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isUserMenuOpen]);
+
+  const displayName = user?.name || 'Neev Rambhia';
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 shrink-0 transition-all gap-2 sm:gap-4 z-20">
@@ -72,7 +96,7 @@ export function Topbar() {
         </div>
       </div>
 
-      {/* Right Actions: Hide Navbar (Focus mode), Notifications & Avatar */}
+      {/* Right Actions: Focus Mode, Notifications, Landing Link & User Profile */}
       <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Hide Navbar (Focus Mode) Button */}
         <button
@@ -89,14 +113,82 @@ export function Topbar() {
         {/* Interactive Notifications Dropdown */}
         <NotificationDropdown />
 
-        {/* Avatar */}
-        <div 
-          className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs sm:text-sm shrink-0 border border-indigo-200"
-          title="Neev Rambhia"
-        >
-          N
-        </div>
+        {/* User Account / Sign In */}
+        {isAuthenticated ? (
+          <div className="relative" ref={userMenuRef}>
+            <button
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center gap-2 p-1 rounded-full hover:ring-2 hover:ring-indigo-100 transition-all"
+            >
+              {user?.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt={displayName}
+                  className="h-8 w-8 rounded-full object-cover border border-indigo-200"
+                />
+              ) : (
+                <div 
+                  className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs sm:text-sm shrink-0 border border-indigo-200 shadow-2xs"
+                  title={displayName}
+                >
+                  {initial}
+                </div>
+              )}
+            </button>
+
+            {/* Profile Dropdown Menu */}
+            {isUserMenuOpen && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl overflow-hidden z-50 animate-fade-in p-2">
+                <div className="p-3 border-b border-slate-100 bg-slate-50/50 rounded-xl mb-1">
+                  <p className="font-display font-bold text-sm text-slate-900 truncate">
+                    {displayName}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate mt-0.5">
+                    {user?.email || 'Student Account'}
+                  </p>
+                  <div className="mt-2 flex items-center gap-1.5 text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-full w-max">
+                    <Sparkles className="h-3 w-3" />
+                    <span>{user?.isGuest ? 'Guest Session' : 'Google Authenticated'}</span>
+                  </div>
+                </div>
+
+                <Link
+                  to="/"
+                  onClick={() => setIsUserMenuOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Landing Page</span>
+                </Link>
+
+                <button
+                  onClick={() => {
+                    setIsUserMenuOpen(false);
+                    signOut();
+                  }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors mt-1"
+                >
+                  <LogOut className="h-3.5 w-3.5" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs hover:bg-indigo-700 transition-colors shadow-2xs"
+          >
+            <LogIn className="h-3.5 w-3.5" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
+
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+      />
     </header>
   );
 }
