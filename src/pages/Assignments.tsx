@@ -1,27 +1,19 @@
 import { useState } from 'react';
-import { useStore, ALL_SEMESTERS } from '@/store/useStore';
+import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Calendar, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { WORKFLOW_STAGE_LABELS, WorkflowStage } from '@/types';
 import { formatDate, getDaysRemaining, cn } from '@/utils';
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
 
 export function Assignments() {
   const { assignments, subjects } = useStore();
-  const [statusFilter, setStatusFilter] = useState<WorkflowStage | 'ALL'>('ALL');
-  const [semesterFilter, setSemesterFilter] = useState<string>('ALL');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
-  const filteredAssignments = assignments
-    .filter(a => statusFilter === 'ALL' || a.status === statusFilter)
-    .filter(a => {
-      if (semesterFilter === 'ALL') return true;
-      const subject = subjects.find(s => s.id === a.subjectId);
-      return subject?.semester === semesterFilter;
-    })
-    .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
+  const filteredAssignments = [...assignments].sort(
+    (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+  );
 
 
   return (
@@ -35,41 +27,6 @@ export function Assignments() {
           <Plus className="h-4 w-4" />
           Add Experiment
         </Button>
-      </div>
-
-      <div className="flex flex-col gap-4 bg-white p-3.5 sm:p-4 rounded-xl border border-slate-100 shadow-soft">
-        <div className="flex flex-wrap gap-4 items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-xs sm:text-sm font-semibold text-slate-500">Semester:</span>
-            <select 
-              value={semesterFilter}
-              onChange={(e) => setSemesterFilter(e.target.value)}
-              className="rounded-lg border border-slate-200 py-1.5 px-2.5 text-xs sm:text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-white"
-            >
-              <option value="ALL">All Semesters</option>
-              {ALL_SEMESTERS.map(s => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <div className="flex overflow-x-auto no-scrollbar gap-1 pt-2 border-t border-slate-100 pb-0.5">
-          {['ALL', ...Object.keys(WORKFLOW_STAGE_LABELS)].map((status) => (
-            <button
-              key={status}
-              onClick={() => setStatusFilter(status as any)}
-              className={cn(
-                "px-2.5 sm:px-3 py-1.5 text-xs sm:text-sm font-medium rounded-lg whitespace-nowrap transition-colors shrink-0",
-                statusFilter === status 
-                  ? "bg-slate-800 text-white shadow-xs" 
-                  : "text-slate-600 hover:bg-slate-100"
-              )}
-            >
-              {status === 'ALL' ? 'All Statuses' : WORKFLOW_STAGE_LABELS[status as WorkflowStage]}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-soft overflow-hidden">
