@@ -10,7 +10,8 @@ import {
   X, 
   Sliders, 
   Sparkles,
-  Inbox
+  Inbox,
+  RotateCcw
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Link } from 'react-router-dom';
@@ -25,13 +26,22 @@ import {
 
 type NotificationTab = 'all' | 'deadlines' | 'settings';
 
+const STORAGE_KEY = 'campusflow_dismissed_notifications';
+
 export function NotificationDropdown() {
   const { assignments, subjects } = useStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<NotificationTab>('all');
   const [permission, setPermission] = useState<NotificationPermissionState>(getNotificationPermission());
   const [isTesting, setIsTesting] = useState(false);
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  const [dismissedIds, setDismissedIds] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Check device permission on open
@@ -89,13 +99,39 @@ export function NotificationDropdown() {
   };
 
   const handleDismissAll = () => {
-    setDismissedIds(urgentAssignments.map(a => a.id));
+    const allIds = urgentAssignments.map(a => a.id);
+    setDismissedIds(prev => {
+      const updated = Array.from(new Set([...prev, ...allIds]));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save dismissed notifications:', err);
+      }
+      return updated;
+    });
   };
 
   const handleDismissSingle = (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDismissedIds(prev => [...prev, id]);
+    setDismissedIds(prev => {
+      const updated = Array.from(new Set([...prev, id]));
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      } catch (err) {
+        console.error('Failed to save dismissed notification:', err);
+      }
+      return updated;
+    });
+  };
+
+  const handleRestoreAll = () => {
+    setDismissedIds([]);
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (err) {
+      console.error('Failed to clear dismissed notifications:', err);
+    }
   };
 
   const displayList = activeTab === 'deadlines' ? deadlineOnlyList : urgentAssignments;
@@ -293,6 +329,15 @@ export function NotificationDropdown() {
                       ? 'No experiments due in the next 3 days.' 
                       : 'No pending experiments needing attention.'}
                   </p>
+                  {dismissedIds.length > 0 && (
+                    <button
+                      onClick={handleRestoreAll}
+                      className="mt-3.5 inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-800 transition-colors py-1.5 px-3 rounded-lg bg-indigo-50/80 hover:bg-indigo-100"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      Restore cleared notifications
+                    </button>
+                  )}
                 </div>
               )}
             </div>

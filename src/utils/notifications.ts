@@ -100,10 +100,17 @@ export function checkAndNotifyDeadlines(assignments: Assignment[], subjects: Sub
   if (getNotificationPermission() !== 'granted') return;
 
   const todayStr = new Date().toISOString().split('T')[0];
+  let dismissedIds: string[] = [];
+  try {
+    const saved = localStorage.getItem('campusflow_dismissed_notifications');
+    dismissedIds = saved ? JSON.parse(saved) : [];
+  } catch {
+    dismissedIds = [];
+  }
 
   assignments.forEach((assignment) => {
-    // Only check unfinished experiments
-    if (assignment.status === 'COMPLETED') return;
+    // Only check unfinished and non-dismissed experiments
+    if (assignment.status === 'COMPLETED' || dismissedIds.includes(assignment.id)) return;
 
     const daysLeft = getDaysRemaining(assignment.dueDate);
     const subject = subjects.find((s) => s.id === assignment.subjectId);
