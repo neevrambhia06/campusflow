@@ -14,7 +14,7 @@ interface BranchedMenuProps {
 export function BranchedMenu({
   subject,
   assignments,
-  defaultExpanded = true,
+  defaultExpanded = false,
   className = '',
 }: BranchedMenuProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);

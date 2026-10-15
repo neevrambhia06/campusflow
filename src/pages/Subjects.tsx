@@ -108,6 +108,7 @@ export function Subjects() {
                           key={subject.id}
                           subject={subject}
                           assignments={subjectAssignments}
+                          defaultExpanded={false}
                         />
                       );
                     })}
