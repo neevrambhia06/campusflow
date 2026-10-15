@@ -28,14 +28,14 @@ export function MagicBentoGrid({ children, className = '' }: MagicBentoGridProps
         setIsHovered(false);
         setMousePos({ x: -1000, y: -1000 });
       }}
-      className={`relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 ${className}`}
+      className={`relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ${className}`}
     >
       {/* Global Cursor Spotlight Gradient */}
       <div
         className="pointer-events-none absolute -inset-px rounded-3xl transition-opacity duration-300 z-10"
         style={{
           opacity: isHovered ? 1 : 0,
-          background: `radial-gradient(650px circle at ${mousePos.x}px ${mousePos.y}px, rgba(99, 102, 241, 0.08), transparent 80%)`,
+          background: `radial-gradient(700px circle at ${mousePos.x}px ${mousePos.y}px, rgba(99, 102, 241, 0.06), transparent 80%)`,
         }}
       />
       {children}
@@ -59,7 +59,7 @@ export function MagicBentoCard({
   children,
   className = '',
   badge,
-  badgeColor = 'bg-indigo-50 text-indigo-700 border-indigo-200',
+  badgeColor = 'bg-indigo-50/90 text-indigo-700 border-indigo-200/70',
   title,
   description,
   icon,
@@ -86,35 +86,38 @@ export function MagicBentoCard({
         setCardMousePos({ x: -1000, y: -1000 });
       }}
       onClick={onClick}
-      className={`relative group bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden ${colSpan} ${
+      className={`relative group bg-white rounded-3xl border border-slate-200/70 p-6 sm:p-7 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.03)] hover:shadow-[0_12px_32px_-8px_rgba(15,23,42,0.08)] hover:border-indigo-300/60 transition-all duration-300 overflow-hidden ${colSpan} ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
     >
+      {/* Subtle Top Glow Line */}
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent pointer-events-none" />
+
       {/* Local Spotlight Border Glow */}
       <div
-        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300 opacity-0 group-hover:opacity-100 z-0"
+        className="pointer-events-none absolute -inset-px rounded-3xl transition-opacity duration-300 opacity-0 group-hover:opacity-100 z-0"
         style={{
-          background: `radial-gradient(350px circle at ${cardMousePos.x}px ${cardMousePos.y}px, rgba(99, 102, 241, 0.15), transparent 80%)`,
+          background: `radial-gradient(350px circle at ${cardMousePos.x}px ${cardMousePos.y}px, rgba(99, 102, 241, 0.12), transparent 80%)`,
         }}
       />
 
       <div className="relative z-10 flex flex-col h-full">
         {/* Card Header if title/icon present */}
         {(title || icon || badge) && (
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div className="flex items-center gap-3">
+          <div className="flex items-start justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3.5">
               {icon && (
-                <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-700 group-hover:text-indigo-600 group-hover:bg-indigo-50 group-hover:border-indigo-100 transition-colors shrink-0">
+                <div className="w-10 h-10 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-700 group-hover:text-indigo-600 group-hover:bg-indigo-50 group-hover:border-indigo-200/80 transition-all duration-300 shadow-2xs shrink-0">
                   {icon}
                 </div>
               )}
               {title && (
                 <div>
-                  <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg group-hover:text-indigo-950 transition-colors">
+                  <h3 className="font-display font-bold text-slate-900 text-base sm:text-lg tracking-tight group-hover:text-indigo-950 transition-colors">
                     {title}
                   </h3>
                   {description && (
-                    <p className="text-xs text-slate-500 mt-0.5">{description}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed font-normal">{description}</p>
                   )}
                 </div>
               )}
@@ -122,7 +125,7 @@ export function MagicBentoCard({
 
             {badge && (
               <span
-                className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${badgeColor}`}
+                className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border shadow-2xs shrink-0 ${badgeColor}`}
               >
                 {badge}
               </span>

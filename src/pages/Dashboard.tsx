@@ -12,6 +12,7 @@ import {
   AcademicProgressCard,
   WorkflowDistributionCard,
   UpcomingDeadlinesCard,
+  CoursesSnapshotCard,
 } from '@/components/dashboard';
 
 export function Dashboard() {
@@ -33,10 +34,11 @@ export function Dashboard() {
   const studentName = user?.name || 'Neev';
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* Dashboard Top Greeting & Action Header */}
+    <div className="space-y-8 pb-12">
+      {/* 1. Dashboard Top Greeting, Live Date Capsule & Quick Metrics Strip */}
       <DashboardHeader
         studentName={studentName}
+        assignments={assignments}
         onAddExperiment={() => setIsAddModalOpen(true)}
       />
 
@@ -59,19 +61,24 @@ export function Dashboard() {
           </Button>
         </div>
       ) : (
-        /* React Bits Magic Bento Grid Layout */
+        /* 2. Premium React Bits Magic Bento Grid Layout */
         <MagicBentoGrid>
-          {/* Bento Card 1: Urgent Actions Needed */}
+          {/* Bento Card 1: Urgent Actions Needed (2 columns) */}
           <ActionRequiredCard assignments={attentionNeeded} subjects={subjects} />
 
-          {/* Bento Card 2: Academic Completion Summary */}
+          {/* Bento Card 2: Academic Completion Momentum */}
           <AcademicProgressCard assignments={assignments} />
 
-          {/* Bento Card 3: 6-Stage Workflow Live Breakdown */}
+          {/* Bento Card 3: 6-Stage Submission Linear Pipeline (2 columns) */}
           <WorkflowDistributionCard assignments={assignments} />
 
-          {/* Bento Card 4: Upcoming 7-day deadlines */}
+          {/* Bento Card 4: Upcoming 7-day deadlines with calendar chips */}
           <UpcomingDeadlinesCard assignments={assignments} subjects={subjects} />
+
+          {/* Bento Card 5: Courses Snapshot with mini progress meters (3 columns) */}
+          {subjects.length > 0 && (
+            <CoursesSnapshotCard subjects={subjects} assignments={assignments} />
+          )}
         </MagicBentoGrid>
       )}
     </div>
