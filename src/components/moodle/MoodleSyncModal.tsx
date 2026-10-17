@@ -514,6 +514,11 @@ export function MoodleSyncModal({ isOpen, onClose, initialSyncData }: MoodleSync
                         )}
                       </div>
                       <p className="text-xs font-semibold text-slate-900 truncate">{exp.title}</p>
+                      {exp.topic && exp.topic !== exp.title && (
+                        <p className="text-[11px] text-indigo-700/90 font-medium truncate mt-0.5">
+                          Topic: {exp.topic}
+                        </p>
+                      )}
                       <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3 text-slate-400" />

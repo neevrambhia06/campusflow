@@ -2,10 +2,10 @@
  * Moodle Integration Service for CampusFlow
  * 
  * Supports:
- * 1. Official Moodle Web Services API (via Vite proxy / server relay)
+ * 1. Official Moodle Web Services API (Direct CORS & Proxy fallback)
  * 2. Automated Course & Assignment discovery
  * 3. Submission status detection (Submitted vs Pending)
- * 4. Experiment extraction & topic mapping
+ * 4. Course section & experiment topic extraction
  * 5. Safe local credential storage
  */
 
@@ -47,13 +47,6 @@ export interface MoodleCourseAssignmentsResponse {
   warnings?: unknown[];
 }
 
-export interface MoodleSubmissionStatus {
-  submitted: boolean;
-  graded: boolean;
-  timeModified?: number;
-  feedback?: string;
-}
-
 export interface MoodleExtractedExperiment {
   moodleAssignId: number;
   moodleCmid: number;
@@ -62,13 +55,13 @@ export interface MoodleExtractedExperiment {
   courseCode: string;
   experimentNumber: number;
   title: string;
+  topic?: string;
   description: string;
   dueDate: string; // YYYY-MM-DD
   moodleUrl: string;
   isSubmitted: boolean;
   isGraded: boolean;
   feedback?: string;
-  topic?: string;
   selected: boolean;
 }
 
@@ -120,50 +113,101 @@ export function getStoredCredentials(): MoodleCredentials {
 }
 
 /**
- * Send request through the Vite / server proxy to avoid browser CORS
+ * Serialize parameters for Moodle Web Services API
+ * Supports simple keys, string values, and arrays like courseids[0]=1&courseids[1]=2
  */
-async function proxyFetch(
+function serializeMoodleData(data: unknown): string {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    const params = new URLSearchParams();
+    for (const [key, val] of Object.entries(data as Record<string, unknown>)) {
+      if (val === undefined || val === null) continue;
+      if (Array.isArray(val)) {
+        val.forEach((item, idx) => {
+          params.append(`${key}[${idx}]`, String(item));
+        });
+      } else {
+        params.append(key, String(val));
+      }
+    }
+    return params.toString();
+  }
+  return String(data);
+}
+
+/**
+ * Send request directly to Moodle, falling back to Vite proxy if browser CORS restricts it
+ */
+async function fetchMoodleApi(
   targetUrl: string,
   method: 'GET' | 'POST' = 'GET',
   headers: Record<string, string> = {},
   data?: unknown
 ): Promise<any> {
-  const response = await fetch('/api/moodle-proxy', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      url: targetUrl,
+  const bodyString = serializeMoodleData(data);
+  const defaultHeaders: Record<string, string> = {
+    ...headers,
+  };
+  if (bodyString && !defaultHeaders['Content-Type']) {
+    defaultHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
+  }
+
+  // 1. Direct browser fetch (APSIT and modern Moodle instances have Access-Control-Allow-Origin: *)
+  try {
+    const response = await fetch(targetUrl, {
       method,
-      headers,
-      data,
-    }),
-  });
+      headers: defaultHeaders,
+      body: method === 'POST' ? bodyString : undefined,
+    });
 
-  if (!response.ok) {
-    let errorMsg = `Server returned status ${response.status}`;
-    try {
-      const errJson = await response.json();
-      if (errJson.error) errorMsg = errJson.error;
-    } catch {
-      // ignore
+    if (response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return await response.json();
+      }
+      return await response.text();
     }
-    throw new Error(errorMsg);
+  } catch (directErr) {
+    console.warn('[MoodleService] Direct browser fetch failed (trying proxy fallback):', directErr);
   }
 
-  const contentType = response.headers.get('content-type') || '';
-  if (contentType.includes('application/json')) {
-    return response.json();
+  // 2. Fallback to /api/moodle-proxy for local dev server
+  try {
+    const proxyRes = await fetch('/api/moodle-proxy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url: targetUrl,
+        method,
+        headers: defaultHeaders,
+        data: bodyString,
+      }),
+    });
+
+    if (proxyRes.ok) {
+      const contentType = proxyRes.headers.get('content-type') || '';
+      if (contentType.includes('application/json')) {
+        return await proxyRes.json();
+      }
+      return await proxyRes.text();
+    }
+  } catch (proxyErr) {
+    console.warn('[MoodleService] Proxy fetch also failed:', proxyErr);
   }
-  return response.text();
+
+  // 3. Fallback error with clear actionable guidance
+  throw new Error(
+    `Could not reach Moodle server. Please check the URL or use the 1-Click Bookmarklet tab to sync directly from your Moodle tab!`
+  );
 }
 
 /**
  * Parse an experiment number from an assignment title or topic string
  */
 export function extractExperimentNumber(title: string, indexFallback: number): number {
-  // Matches: "Exp 1", "Experiment 02", "Lab 3", "Practical #4", "Assignment 5", "E1", "Ex-2"
   const patterns = [
     /(?:exp(?:eriment)?|lab|practical|assignment|unit|task)\s*[:#\-_]?\s*0*(\d+)/i,
     /\b(?:e|ex)\s*0*(\d+)\b/i,
@@ -199,6 +243,17 @@ export function extractCourseCode(course: { fullname: string; shortname: string 
 }
 
 /**
+ * Clean HTML markup from descriptions
+ */
+function cleanHtml(html: string): string {
+  return (html || '')
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
  * Connect to Moodle, authenticate, and scan all assignments & submission statuses
  */
 export async function scanMoodle(
@@ -212,7 +267,7 @@ export async function scanMoodle(
 
   let token = creds.token;
 
-  // 1. Authenticate to get Web Service token if not already possessed
+  // 1. Authenticate to get Web Service token
   if (!token) {
     if (!creds.username || !creds.password) {
       throw new Error('Please enter both your Moodle username and password.');
@@ -221,33 +276,41 @@ export async function scanMoodle(
     onProgress?.('Authenticating with Moodle...', 15);
     const tokenUrl = `${baseUrl}/login/token.php`;
     
-    const tokenResponse = await proxyFetch(
+    const tokenResponse = await fetchMoodleApi(
       tokenUrl,
       'POST',
       { 'Content-Type': 'application/x-www-form-urlencoded' },
       {
-        username: creds.username,
-        password: creds.password,
+        username: creds.username.trim(),
+        password: creds.password.trim(),
         service: 'moodle_mobile_app',
       }
     );
 
-    if (tokenResponse.error) {
-      throw new Error(`Moodle login error: ${tokenResponse.error}`);
+    if (tokenResponse?.error || tokenResponse?.errorcode) {
+      if (tokenResponse.errorcode === 'invalidlogin') {
+        throw new Error('Invalid username or password. Please verify your credentials.');
+      }
+      if (tokenResponse.errorcode === 'enablemobilewebservice') {
+        throw new Error(
+          'Mobile Web Services are disabled by your college admin on this site. Please switch to the "1-Click Bookmarklet" tab above to sync instantly!'
+        );
+      }
+      throw new Error(`Moodle login error: ${tokenResponse.error || tokenResponse.message || tokenResponse.errorcode}`);
     }
 
-    if (!tokenResponse.token) {
-      throw new Error('Could not obtain Moodle Web Service token. Ensure the Moodle Mobile service is enabled for your account, or use the 1-Click Bookmarklet.');
+    if (!tokenResponse?.token) {
+      throw new Error('Could not obtain Moodle Web Service token. Please check your credentials or use the 1-Click Bookmarklet.');
     }
 
     token = tokenResponse.token;
   }
 
-  // 2. Query Site Info & User ID
+  // 2. Query Site Info & Student Identity
   onProgress?.('Verifying student session...', 30);
   const serverUrl = `${baseUrl}/webservice/rest/server.php`;
 
-  const siteInfo = await proxyFetch(
+  const siteInfo = await fetchMoodleApi(
     serverUrl,
     'POST',
     { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -258,7 +321,10 @@ export async function scanMoodle(
     }
   );
 
-  if (siteInfo.exception) {
+  if (siteInfo?.exception || siteInfo?.errorcode) {
+    if (siteInfo.errorcode === 'invalidtoken') {
+      throw new Error('Session token expired or invalid. Please re-enter your credentials.');
+    }
     throw new Error(`Moodle Error: ${siteInfo.message || siteInfo.errorcode}`);
   }
 
@@ -266,9 +332,9 @@ export async function scanMoodle(
   const userName = siteInfo.fullname || creds.username;
   const siteName = siteInfo.sitename;
 
-  // 3. Query Enrolled Courses
+  // 3. Query Enrolled Courses & Lab Subjects
   onProgress?.('Scanning enrolled subjects and labs...', 45);
-  const courses: MoodleCourse[] = await proxyFetch(
+  const courses: MoodleCourse[] = await fetchMoodleApi(
     serverUrl,
     'POST',
     { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -289,10 +355,47 @@ export async function scanMoodle(
     };
   }
 
-  // 4. Query Assignments across all courses
-  onProgress?.('Extracting experiments and deadlines...', 65);
+  // 4. Query Course Contents to extract Topics for each section
+  onProgress?.('Reading experiment topics and lab modules...', 60);
+  const topicMapByCmid = new Map<number, string>(); // cmid -> topic title
+  const topicMapByAssignId = new Map<number, string>(); // assignId -> topic title
+
+  for (const c of courses) {
+    try {
+      const contents = await fetchMoodleApi(
+        serverUrl,
+        'POST',
+        { 'Content-Type': 'application/x-www-form-urlencoded' },
+        {
+          wstoken: token,
+          wsfunction: 'core_course_get_contents',
+          moodlewsrestformat: 'json',
+          courseid: c.id,
+        }
+      );
+
+      if (Array.isArray(contents)) {
+        for (const section of contents) {
+          const sectionName = section.name || '';
+          if (Array.isArray(section.modules)) {
+            for (const mod of section.modules) {
+              if (mod.modname === 'assign' || mod.modname === 'assignment') {
+                if (mod.id) topicMapByCmid.set(mod.id, sectionName);
+                if (mod.instance) topicMapByAssignId.set(mod.instance, sectionName);
+              }
+            }
+          }
+        }
+      }
+    } catch {
+      // Continue if contents query fails for a single course
+    }
+  }
+
+  // 5. Query Assignments across all courses
+  onProgress?.('Extracting assignments and deadlines...', 75);
   const courseIds = courses.map((c) => c.id);
-  const assignmentsData: MoodleCourseAssignmentsResponse = await proxyFetch(
+  const assignmentsData: MoodleCourseAssignmentsResponse = await fetchMoodleApi(
     serverUrl,
     'POST',
     { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -304,11 +407,11 @@ export async function scanMoodle(
     }
   );
 
-  const rawAssignmentsByCourse = assignmentsData.courses || [];
+  const rawAssignmentsByCourse = assignmentsData?.courses || [];
   const extractedList: MoodleExtractedExperiment[] = [];
 
-  // 5. Query submission statuses for all found assignments
-  onProgress?.('Checking submission statuses (submitted vs pending)...', 80);
+  // 6. Check submission status for all discovered experiments
+  onProgress?.('Checking submission statuses (submitted vs pending)...', 85);
 
   for (const c of rawAssignmentsByCourse) {
     const courseMeta = courses.find((cm) => cm.id === c.id);
@@ -321,7 +424,7 @@ export async function scanMoodle(
       let feedback = '';
 
       try {
-        const subData = await proxyFetch(
+        const subData = await fetchMoodleApi(
           serverUrl,
           'POST',
           { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -333,7 +436,8 @@ export async function scanMoodle(
           }
         );
 
-        if (subData?.lastattempt?.submission?.status === 'submitted') {
+        const subStatus = subData?.lastattempt?.submission?.status || '';
+        if (subStatus === 'submitted') {
           isSubmitted = true;
         }
         if (subData?.feedback?.grade?.grade) {
@@ -341,7 +445,7 @@ export async function scanMoodle(
           feedback = `Graded: ${subData.feedback.grade.grade}`;
         }
       } catch {
-        // Continue with basic status if detailed status query fails for one item
+        // Continue if single submission status query fails
       }
 
       const expNum = extractExperimentNumber(a.name, expCounter++);
@@ -349,13 +453,15 @@ export async function scanMoodle(
         ? new Date(a.duedate * 1000).toISOString().split('T')[0]
         : new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
 
-      // Strip HTML tags from description/intro
-      const cleanDescription = (a.intro || '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
+      const cleanDescription = cleanHtml(a.intro || '');
       const moodleDirectUrl = `${baseUrl}/mod/assign/view.php?id=${a.cmid || a.id}`;
+
+      // Find topic from section contents if available
+      const sectionTopic = topicMapByCmid.get(a.cmid) || topicMapByAssignId.get(a.id);
+      let topic = sectionTopic;
+      if (!topic || topic.toLowerCase().startsWith('general') || topic.toLowerCase().startsWith('topic')) {
+        topic = cleanDescription.substring(0, 80) || a.name;
+      }
 
       extractedList.push({
         moodleAssignId: a.id,
@@ -365,6 +471,7 @@ export async function scanMoodle(
         courseCode,
         experimentNumber: expNum,
         title: a.name.trim(),
+        topic: topic?.trim(),
         description: cleanDescription,
         dueDate,
         moodleUrl: moodleDirectUrl,
@@ -432,7 +539,7 @@ export async function applyMoodleSyncToStore(
         id: subjectId,
         name: exp.courseName,
         code: exp.courseCode,
-        semester: 'Semester 6', // Default or user can adjust
+        semester: 'Semester 6',
         color: randomColor,
         description: `Imported from Moodle (${exp.courseName})`,
       };
@@ -452,7 +559,7 @@ export async function applyMoodleSyncToStore(
 
     const now = new Date().toISOString();
 
-    // Determine workflow stage and checklist from Moodle submission state
+    // Determine workflow stage from Moodle submission status
     let targetStatus: WorkflowStage = 'NOT_STARTED';
     if (exp.isGraded) {
       targetStatus = 'COMPLETED';
@@ -479,6 +586,7 @@ export async function applyMoodleSyncToStore(
       await actions.updateAssignment(existing.id, {
         dueDate: exp.dueDate,
         moodleUrl: exp.moodleUrl,
+        notes: exp.topic ? `Topic: ${exp.topic}` : existing.notes,
         checklist: mergedChecklist,
         status: finalStatus,
         facultyFeedback: exp.feedback || existing.facultyFeedback,
@@ -491,7 +599,8 @@ export async function applyMoodleSyncToStore(
         subjectId,
         experimentNumber: exp.experimentNumber,
         title: exp.title,
-        description: exp.description,
+        description: exp.description || (exp.topic ? `Topic: ${exp.topic}` : ''),
+        notes: exp.topic ? `Topic: ${exp.topic}` : undefined,
         moodleUrl: exp.moodleUrl,
         faculty: 'Faculty',
         releaseDate: new Date().toISOString().split('T')[0],
