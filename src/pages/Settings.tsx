@@ -14,9 +14,7 @@ import {
   RefreshCw, 
   Bell, 
   Send,
-  Check,
-  Globe,
-  Sparkles
+  Check
 } from 'lucide-react';
 import { useToast } from '@/store/useToast';
 import { useState, useEffect } from 'react';
@@ -26,9 +24,6 @@ import {
   sendTestNotification, 
   NotificationPermissionState 
 } from '@/utils/notifications';
-import { MoodleSyncModal } from '@/components/moodle';
-import { getStoredCredentials } from '@/services/moodleService';
-
 
 export function SettingsPage() {
   const { 
@@ -44,15 +39,10 @@ export function SettingsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermissionState>(getNotificationPermission());
   const [isTestingNotification, setIsTestingNotification] = useState(false);
-  const [isMoodleModalOpen, setIsMoodleModalOpen] = useState(false);
-  const [moodleUrl, setMoodleUrl] = useState('');
 
   useEffect(() => {
     setNotificationPermission(getNotificationPermission());
-    const creds = getStoredCredentials();
-    if (creds.url) setMoodleUrl(creds.url);
   }, []);
-
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -232,68 +222,7 @@ export function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Moodle LMS Integration Card */}
-        <Card className="md:col-span-2 border-orange-200/80 bg-gradient-to-br from-orange-50/20 via-white to-amber-50/20">
-          <CardHeader className="pb-3 border-b border-orange-100">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <div className="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center font-bold text-xs">
-                  M
-                </div>
-                <span>Moodle LMS Auto-Sync Flow</span>
-              </CardTitle>
-              <Button
-                size="sm"
-                className="gap-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-bold shadow-xs shrink-0 self-start sm:self-auto"
-                onClick={() => setIsMoodleModalOpen(true)}
-              >
-                <RefreshCw className="h-3.5 w-3.5" />
-                <span>Configure & Sync Now</span>
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-6 space-y-4">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-orange-100 bg-white shadow-2xs">
-              <div className="space-y-1">
-                <p className="font-semibold text-sm text-slate-900 flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-orange-600" />
-                  Moodle Portal Status
-                </p>
-                <p className="text-xs sm:text-sm text-slate-500">
-                  {moodleUrl ? (
-                    <span className="text-slate-800 font-mono text-xs">{moodleUrl}</span>
-                  ) : (
-                    'No Moodle URL configured yet. Click Configure & Sync to connect.'
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800">
-                  <Sparkles className="h-3 w-3 text-orange-600" />
-                  Auto-Scanner Active
-                </span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs text-slate-600">
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="font-bold text-slate-900 mb-0.5">1. Read Courses & Labs</p>
-                <p className="text-slate-500">Auto-detects all enrolled subjects and laboratory modules.</p>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="font-bold text-slate-900 mb-0.5">2. Track Deadlines & Topics</p>
-                <p className="text-slate-500">Extracts experiment names, numbers, descriptions, and cutoffs.</p>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <p className="font-bold text-slate-900 mb-0.5">3. Submission Verification</p>
-                <p className="text-slate-500">Checks whether you have submitted or if it's still pending on Moodle.</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Mobile & Responsiveness Info */}
-
         <Card>
           <CardHeader className="pb-3 border-b border-slate-100">
             <CardTitle className="text-lg flex items-center gap-2">
@@ -412,16 +341,6 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <MoodleSyncModal
-        isOpen={isMoodleModalOpen}
-        onClose={() => {
-          setIsMoodleModalOpen(false);
-          const creds = getStoredCredentials();
-          if (creds.url) setMoodleUrl(creds.url);
-        }}
-      />
     </div>
   );
 }
-

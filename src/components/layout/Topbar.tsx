@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose, RefreshCw } from 'lucide-react';
+import { Search, Menu, PanelLeftOpen, PanelLeftClose, PanelTopClose } from 'lucide-react';
 import { useLayoutStore } from '@/store/useLayoutStore';
 import { NotificationDropdown } from './NotificationDropdown';
 import { UserMenu } from './UserMenu';
 import { LoginModal } from '@/components/auth/LoginModal';
-import { MoodleSyncModal } from '@/components/moodle';
 import { cn } from '@/utils';
 
 export function Topbar() {
@@ -16,8 +15,6 @@ export function Topbar() {
   } = useLayoutStore();
 
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isMoodleModalOpen, setIsMoodleModalOpen] = useState(false);
-
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-slate-200 bg-white px-4 sm:px-6 lg:px-8 shrink-0 transition-all gap-2 sm:gap-4 z-20">
@@ -94,18 +91,6 @@ export function Topbar() {
           <span className="hidden sm:inline text-xs text-slate-600">Hide Navbar</span>
         </button>
 
-        {/* Quick Moodle Sync Button */}
-        <button
-          type="button"
-          onClick={() => setIsMoodleModalOpen(true)}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-orange-200/80 bg-orange-50/50 text-orange-700 hover:bg-orange-100/70 active:scale-95 transition-all text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-orange-400 shadow-2xs"
-          title="Sync Moodle LMS"
-          aria-label="Sync Moodle"
-        >
-          <RefreshCw className="h-3.5 w-3.5 text-orange-600" />
-          <span className="hidden lg:inline">Sync Moodle</span>
-        </button>
-
         {/* Interactive Notifications Dropdown */}
         <NotificationDropdown />
 
@@ -117,12 +102,6 @@ export function Topbar() {
         isOpen={isLoginModalOpen}
         onClose={() => setIsLoginModalOpen(false)}
       />
-
-      <MoodleSyncModal
-        isOpen={isMoodleModalOpen}
-        onClose={() => setIsMoodleModalOpen(false)}
-      />
     </header>
   );
 }
-

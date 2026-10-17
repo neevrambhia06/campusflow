@@ -1,43 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { Plus, Calendar, ChevronRight, RefreshCw } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Plus, Calendar, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { formatDate, getDaysRemaining, cn } from '@/utils';
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
-import { MoodleSyncModal } from '@/components/moodle';
-import { MoodleExtractedExperiment } from '@/services/moodleService';
 
 export function Assignments() {
   const { assignments, subjects } = useStore();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isMoodleModalOpen, setIsMoodleModalOpen] = useState(false);
-  const [bookmarkletData, setBookmarkletData] = useState<MoodleExtractedExperiment[] | undefined>();
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  // Listen for bookmarklet sync payload in URL query params
-  useEffect(() => {
-    const rawSync = searchParams.get('moodle_sync');
-    if (rawSync) {
-      try {
-        const parsed = JSON.parse(rawSync);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setBookmarkletData(parsed);
-          setIsMoodleModalOpen(true);
-        }
-      } catch (err) {
-        console.warn('Could not parse bookmarklet payload from URL', err);
-      }
-      // Clean query parameter after reading
-      searchParams.delete('moodle_sync');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
-
+  
   const filteredAssignments = [...assignments].sort(
     (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
   );
+
 
   return (
     <div className="space-y-6 pb-10">
@@ -46,23 +23,11 @@ export function Assignments() {
           <h1 className="text-2xl sm:text-3xl font-display font-bold tracking-tight text-slate-900">Assignments</h1>
           <p className="mt-1 sm:mt-2 text-sm sm:text-base text-slate-500">Track every experiment from Moodle to faculty approval.</p>
         </div>
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <Button
-            variant="outline"
-            className="gap-2 flex-1 sm:flex-initial justify-center border-orange-200/80 bg-orange-50/40 text-orange-700 hover:bg-orange-100/60 hover:text-orange-800 transition-colors shadow-2xs font-semibold"
-            onClick={() => setIsMoodleModalOpen(true)}
-          >
-            <RefreshCw className="h-4 w-4 text-orange-600" />
-            <span>Sync Moodle</span>
-          </Button>
-
-          <Button className="gap-2 flex-1 sm:flex-initial justify-center shadow-xs" onClick={() => setIsAddModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            <span>Add Experiment</span>
-          </Button>
-        </div>
+        <Button className="gap-2 w-full sm:w-auto shrink-0" onClick={() => setIsAddModalOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add Experiment
+        </Button>
       </div>
-
 
       <div className="bg-white rounded-xl border border-slate-100 shadow-soft overflow-hidden">
         {filteredAssignments.length > 0 ? (
@@ -147,16 +112,6 @@ export function Assignments() {
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
       />
-
-      <MoodleSyncModal
-        isOpen={isMoodleModalOpen}
-        onClose={() => {
-          setIsMoodleModalOpen(false);
-          setBookmarkletData(undefined);
-        }}
-        initialSyncData={bookmarkletData}
-      />
     </div>
   );
 }
-
