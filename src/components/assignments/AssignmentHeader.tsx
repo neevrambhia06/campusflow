@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { ArrowLeft, Edit, Trash2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -74,12 +75,18 @@ export function AssignmentHeader({
 
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <Badge
-            variant="secondary"
-            className="px-3 py-1 text-sm font-semibold uppercase tracking-wider bg-indigo-50 text-[var(--color-primary)]"
+          <Link
+            to={`/subjects/${subject.id}`}
+            title={`View all experiments in ${subject.name}`}
+            className="inline-block transition-transform hover:scale-105"
           >
-            {subject.name}
-          </Badge>
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-sm font-semibold uppercase tracking-wider bg-indigo-50 text-[var(--color-primary)] hover:bg-indigo-100/80 cursor-pointer transition-colors"
+            >
+              {subject.name}
+            </Badge>
+          </Link>
           <span className="text-slate-400 font-medium">—</span>
           <span className="text-slate-600 font-medium">Experiment {assignment.experimentNumber}</span>
         </div>

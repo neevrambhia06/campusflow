@@ -1,19 +1,38 @@
 import { useState } from 'react';
 import { useStore, ALL_SEMESTERS } from '@/store/useStore';
+import { useToast } from '@/store/useToast';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Plus, GitBranch, LayoutGrid, BookOpen } from 'lucide-react';
 import { cn } from '@/utils';
 import { SubjectFormModal, SubjectCard } from '@/components/subjects';
 import { BranchedMenu } from '@/components/ui/BranchedMenu';
+import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
+import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
+import { Subject } from '@/types';
 
 export function Subjects() {
-  const { subjects, assignments } = useStore();
+  const { subjects, assignments, deleteSubject } = useStore();
+  const { addToast } = useToast();
+
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewMode, setViewMode] = useState<'branched' | 'grid'>('branched');
+  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
+  const [selectedSubjectForExp, setSelectedSubjectForExp] = useState<Subject | null>(null);
+
+  const subjectToDeleteExpsCount = subjectToDelete
+    ? assignments.filter((a) => a.subjectId === subjectToDelete.id).length
+    : 0;
+
+  const handleDeleteSubject = () => {
+    if (!subjectToDelete) return;
+    deleteSubject(subjectToDelete.id);
+    addToast(`Subject "${subjectToDelete.name}" and all associated experiments deleted.`);
+    setSubjectToDelete(null);
+  };
 
   return (
-    <div className="space-y-8 pb-10">
+    <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
@@ -25,7 +44,7 @@ export function Subjects() {
             Subjects & Experiments
           </h1>
           <p className="mt-1 sm:mt-1.5 text-sm sm:text-base text-slate-500">
-            Explore subjects and their connected experiments in a structured workflow tree.
+            Explore subjects and their connected experiments in a structured workflow tree or grid.
           </p>
         </div>
 
@@ -62,7 +81,7 @@ export function Subjects() {
 
           <Button className="gap-2 shrink-0 shadow-sm" onClick={() => setIsAddModalOpen(true)}>
             <Plus className="h-4 w-4" />
-            Add Subject
+            <span>Add Subject</span>
           </Button>
         </div>
       </div>
@@ -81,8 +100,8 @@ export function Subjects() {
             </CardContent>
           </Card>
         ) : (
-          ALL_SEMESTERS.map(semester => {
-            const semesterSubjects = subjects.filter(s => s.semester === semester);
+          ALL_SEMESTERS.map((semester) => {
+            const semesterSubjects = subjects.filter((s) => s.semester === semester);
             if (semesterSubjects.length === 0) return null;
 
             return (
@@ -97,17 +116,19 @@ export function Subjects() {
                   <div className="h-px bg-slate-200 flex-1" />
                 </div>
 
-                {/* 5. React Bits BranchedMenu View */}
+                {/* React Bits BranchedMenu View */}
                 {viewMode === 'branched' ? (
                   <div className="space-y-5">
-                    {semesterSubjects.map(subject => {
-                      const subjectAssignments = assignments.filter(a => a.subjectId === subject.id);
+                    {semesterSubjects.map((subject) => {
+                      const subjectAssignments = assignments.filter((a) => a.subjectId === subject.id);
                       return (
                         <BranchedMenu
                           key={subject.id}
                           subject={subject}
                           assignments={subjectAssignments}
                           defaultExpanded={false}
+                          onDeleteSubject={(s) => setSubjectToDelete(s)}
+                          onAddExperiment={(s) => setSelectedSubjectForExp(s)}
                         />
                       );
                     })}
@@ -122,6 +143,7 @@ export function Subjects() {
                           key={subject.id}
                           subject={subject}
                           assignments={subjectAssignments}
+                          onDeleteSubject={(s) => setSubjectToDelete(s)}
                         />
                       );
                     })}
@@ -133,9 +155,48 @@ export function Subjects() {
         )}
       </div>
 
+      {/* Add Subject Modal */}
       <SubjectFormModal 
         isOpen={isAddModalOpen} 
         onClose={() => setIsAddModalOpen(false)} 
+      />
+
+      {/* Add Experiment with Preselected Subject Modal */}
+      {selectedSubjectForExp && (
+        <ExperimentFormModal
+          isOpen={!!selectedSubjectForExp}
+          onClose={() => setSelectedSubjectForExp(null)}
+          preselectedSemester={selectedSubjectForExp.semester}
+          preselectedSubjectId={selectedSubjectForExp.id}
+        />
+      )}
+
+      {/* Delete Subject Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={!!subjectToDelete}
+        onClose={() => setSubjectToDelete(null)}
+        onConfirm={handleDeleteSubject}
+        title="Delete Subject"
+        message={
+          subjectToDelete ? (
+            <div className="space-y-3">
+              <p>
+                Are you sure you want to delete <strong>{subjectToDelete.name}</strong> ({subjectToDelete.code})?
+              </p>
+              {subjectToDeleteExpsCount > 0 ? (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 leading-relaxed">
+                  <strong>Warning:</strong> This subject has <strong>{subjectToDeleteExpsCount} experiment(s)</strong> attached to it. Deleting this subject will permanently remove all associated experiments and lab checklist items.
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  This subject currently has no experiments attached.
+                </p>
+              )}
+            </div>
+          ) : null
+        }
+        confirmText="Delete Subject & Experiments"
+        isDestructive
       />
     </div>
   );
