@@ -1,4 +1,4 @@
-import { ArrowLeft, Edit, Trash2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Edit, Trash2, CheckCircle2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Assignment, Subject } from '@/types';
@@ -8,10 +8,13 @@ interface AssignmentHeaderProps {
   subject: Subject;
   completedCount: number;
   totalCount: number;
+  prevAssignment?: Assignment | null;
+  nextAssignment?: Assignment | null;
   onBack: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onMarkAllCompleted: () => void;
+  onNavigateToAssignment?: (id: string) => void;
 }
 
 export function AssignmentHeader({
@@ -19,21 +22,55 @@ export function AssignmentHeader({
   subject,
   completedCount,
   totalCount,
+  prevAssignment,
+  nextAssignment,
   onBack,
   onEdit,
   onDelete,
   onMarkAllCompleted,
+  onNavigateToAssignment,
 }: AssignmentHeaderProps) {
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to Assignments
-      </button>
+      {/* Top Navigation Row: Back Button & Next/Prev Quick Switches */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span>Back to Assignments</span>
+        </button>
+
+        <div className="flex items-center gap-2">
+          {prevAssignment && (
+            <button
+              type="button"
+              onClick={() => onNavigateToAssignment?.(prevAssignment.id)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-2xs"
+              title={`Exp ${prevAssignment.experimentNumber}: ${prevAssignment.title}`}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Prev (Exp {prevAssignment.experimentNumber})</span>
+              <span className="sm:hidden">Prev</span>
+            </button>
+          )}
+
+          {nextAssignment && (
+            <button
+              type="button"
+              onClick={() => onNavigateToAssignment?.(nextAssignment.id)}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-xs font-bold text-white shadow-xs hover:shadow-sm transition-all"
+              title={`Exp ${nextAssignment.experimentNumber}: ${nextAssignment.title}`}
+            >
+              <span>Next Experiment</span>
+              <span className="hidden sm:inline"> (Exp {nextAssignment.experimentNumber})</span>
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      </div>
 
       <div>
         <div className="flex items-center gap-3 mb-2">
@@ -53,6 +90,18 @@ export function AssignmentHeader({
           </h1>
 
           <div className="flex gap-2 sm:gap-3 shrink-0 flex-wrap w-full sm:w-auto">
+            {/* Direct Next Experiment Action Button */}
+            {nextAssignment && (
+              <Button
+                onClick={() => onNavigateToAssignment?.(nextAssignment.id)}
+                size="sm"
+                className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold flex-1 sm:flex-initial justify-center shadow-xs"
+              >
+                <span>Next Experiment</span>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            )}
+
             <Button
               variant="outline"
               size="sm"

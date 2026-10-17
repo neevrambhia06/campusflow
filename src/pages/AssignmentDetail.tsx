@@ -11,6 +11,7 @@ import {
   AssignmentWorkflowStepper,
   AssignmentChecklist,
   AssignmentSidebar,
+  AssignmentPagination,
 } from '@/components/assignments';
 
 export function AssignmentDetail() {
@@ -34,6 +35,30 @@ export function AssignmentDetail() {
         </Button>
       </div>
     );
+  }
+
+  // Find all experiments for this subject, sorted by experiment number
+  const subjectAssignments = assignments
+    .filter((a) => a.subjectId === assignment.subjectId)
+    .sort((a, b) => (a.experimentNumber || 0) - (b.experimentNumber || 0));
+
+  const currentIndex = subjectAssignments.findIndex((a) => a.id === assignment.id);
+  const prevAssignment = currentIndex > 0 ? subjectAssignments[currentIndex - 1] : null;
+
+  // Next experiment in the same course, or fallback to next chronological experiment
+  let nextAssignment =
+    currentIndex >= 0 && currentIndex < subjectAssignments.length - 1
+      ? subjectAssignments[currentIndex + 1]
+      : null;
+
+  if (!nextAssignment) {
+    const allSorted = [...assignments].sort(
+      (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    );
+    const overallIndex = allSorted.findIndex((a) => a.id === assignment.id);
+    if (overallIndex >= 0 && overallIndex < allSorted.length - 1) {
+      nextAssignment = allSorted[overallIndex + 1];
+    }
   }
 
   const TOTAL_CHECKLIST_ITEMS = 6;
@@ -84,17 +109,20 @@ export function AssignmentDetail() {
   };
 
   return (
-    <div className="space-y-8 pb-10">
-      {/* 1. Header with Breadcrumb and Action Buttons */}
+    <div className="space-y-8 pb-12">
+      {/* 1. Header with Breadcrumb, Actions, and Quick Next/Prev Switchers */}
       <AssignmentHeader
         assignment={assignment}
         subject={subject}
         completedCount={completedCount}
         totalCount={TOTAL_CHECKLIST_ITEMS}
+        prevAssignment={prevAssignment}
+        nextAssignment={nextAssignment}
         onBack={() => navigate(-1)}
         onEdit={() => setIsEditExpOpen(true)}
         onDelete={() => setIsDeleteExpOpen(true)}
         onMarkAllCompleted={handleMarkAllCompleted}
+        onNavigateToAssignment={(targetId) => navigate(`/assignments/${targetId}`)}
       />
 
       {/* 2. React Bits Stepper Component for Experiment Steps */}
@@ -121,6 +149,12 @@ export function AssignmentDetail() {
           <AssignmentSidebar assignment={assignment} />
         </div>
       </div>
+
+      {/* 4. Bottom Pagination Bar to Navigate to Next / Previous Experiment */}
+      <AssignmentPagination
+        prevAssignment={prevAssignment}
+        nextAssignment={nextAssignment}
+      />
 
       {/* Modals & Dialogs */}
       <ExperimentFormModal
