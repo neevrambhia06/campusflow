@@ -146,7 +146,7 @@ export function AssignmentDetail() {
 
         {/* Right Info Sidebar Card */}
         <div className="space-y-6">
-          <AssignmentSidebar assignment={assignment} />
+          <AssignmentSidebar assignment={{ ...assignment, checklist }} />
         </div>
       </div>
 

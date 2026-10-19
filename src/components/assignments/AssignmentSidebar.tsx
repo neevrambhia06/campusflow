@@ -1,35 +1,31 @@
 import { Calendar, User, Link as LinkIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
-import { Assignment, WorkflowStage, WORKFLOW_STAGE_LABELS } from '@/types';
-import { formatDate } from '@/utils';
+import { Assignment } from '@/types';
+import { formatDate, getAssignmentChecklistStatus } from '@/utils';
 
 interface AssignmentSidebarProps {
   assignment: Assignment;
 }
 
-const getStatusBadgeVariant = (status: WorkflowStage) => {
-  switch (status) {
-    case 'NOT_STARTED': return 'default';
-    case 'IN_PROGRESS': return 'indigo';
-    case 'READY_FOR_UPLOAD': return 'warning';
-    case 'UPLOADED': return 'indigo';
-    case 'FACULTY_CHECKING': return 'purple';
-    case 'CORRECTION_REQUIRED': return 'error';
-    case 'COMPLETED': return 'success';
-    default: return 'default';
-  }
-};
-
 export function AssignmentSidebar({ assignment }: AssignmentSidebarProps) {
+  const statusInfo = getAssignmentChecklistStatus(assignment);
+
   return (
     <Card>
       <CardContent className="p-6 space-y-6">
         <div>
           <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Status</span>
-          <Badge variant={getStatusBadgeVariant(assignment.status)} className="text-sm py-1">
-            {WORKFLOW_STAGE_LABELS[assignment.status]}
-          </Badge>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Badge variant={statusInfo.variant} className="text-sm py-1 font-semibold">
+              {statusInfo.label}
+            </Badge>
+          </div>
+          {statusInfo.remainingCount > 0 && statusInfo.remainingCount < statusInfo.totalCount && (
+            <p className="text-[11px] text-slate-500 mt-1.5 font-medium">
+              {statusInfo.remainingCount} {statusInfo.remainingCount === 1 ? 'task' : 'tasks'} left in checklist
+            </p>
+          )}
         </div>
 
         <div>

@@ -9,7 +9,7 @@ import {
   Trash2, 
   Plus 
 } from 'lucide-react';
-import { cn } from '@/utils';
+import { cn, getAssignmentChecklistStatus } from '@/utils';
 
 interface BranchedMenuProps {
   subject: Subject;
@@ -178,24 +178,30 @@ export function BranchedMenu({
                         </div>
                       </div>
 
-                      {/* Status badge */}
-                      <div className="shrink-0 ml-2">
-                        <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                            isCompleted
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : assignment.status === 'CORRECTION_REQUIRED'
-                              ? 'bg-red-100 text-red-700'
-                              : 'bg-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {isCompleted
-                            ? 'Completed'
-                            : assignment.status === 'CORRECTION_REQUIRED'
-                            ? 'Correction'
-                            : 'In Progress'}
-                        </span>
-                      </div>
+                      {/* Status badge: Shows the next thing left from the checklist */}
+                      {(() => {
+                        const statusInfo = getAssignmentChecklistStatus(assignment);
+                        return (
+                          <div className="shrink-0 ml-2">
+                            <span
+                              className={cn(
+                                'text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-colors',
+                                statusInfo.isCompleted
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : statusInfo.isCorrection
+                                  ? 'bg-red-100 text-red-700'
+                                  : statusInfo.variant === 'warning'
+                                  ? 'bg-amber-100 text-amber-800'
+                                  : statusInfo.variant === 'purple'
+                                  ? 'bg-purple-100 text-purple-800'
+                                  : 'bg-indigo-100 text-indigo-800'
+                              )}
+                            >
+                              {statusInfo.label}
+                            </span>
+                          </div>
+                        );
+                      })()}
                     </Link>
                   </div>
                 );

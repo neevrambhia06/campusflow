@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { Plus, Calendar, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { formatDate, getDaysRemaining, cn } from '@/utils';
+import { formatDate, getDaysRemaining, cn, getAssignmentChecklistStatus } from '@/utils';
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
 
 export function Assignments() {
@@ -80,15 +80,20 @@ export function Assignments() {
                       </p>
                     </div>
                     
-                    <div className="w-28 sm:w-32 flex flex-col items-end justify-center shrink-0">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1 sm:mb-1.5">{completedCount} / 6 completed</p>
-                      <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-                        <div className="h-full bg-[var(--color-primary)] rounded-full transition-all" style={{ width: `${progress}%` }} />
-                      </div>
-                      {a.status === 'CORRECTION_REQUIRED' && (
-                        <Badge variant="error" className="mt-1.5 text-[10px] px-1.5 py-0">Correction</Badge>
-                      )}
-                    </div>
+                    {(() => {
+                      const statusInfo = getAssignmentChecklistStatus(a);
+                      return (
+                        <div className="w-32 sm:w-40 flex flex-col items-end justify-center shrink-0">
+                          <Badge variant={statusInfo.variant} className="text-[10px] px-2 py-0.5 font-bold mb-1.5">
+                            {statusInfo.label}
+                          </Badge>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-[var(--color-primary)] rounded-full transition-all" style={{ width: `${progress}%` }} />
+                          </div>
+                          <p className="text-[10px] font-semibold text-slate-400 mt-1">{completedCount} / 6 completed</p>
+                        </div>
+                      );
+                    })()}
 
                     <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-[var(--color-primary)] transition-colors hidden sm:block shrink-0" />
                   </div>

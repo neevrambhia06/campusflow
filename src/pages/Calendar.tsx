@@ -2,7 +2,7 @@ import { useStore } from '@/store/useStore';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Clock, ArrowRight } from 'lucide-react';
-import { getDaysRemaining, cn } from '@/utils';
+import { getDaysRemaining, cn, getAssignmentChecklistStatus } from '@/utils';
 import { Link } from 'react-router-dom';
 
 export function CalendarPage() {
@@ -75,6 +75,14 @@ export function CalendarPage() {
                                 {subject?.code}
                               </Badge>
                               <span className="text-xs sm:text-sm font-semibold text-slate-500">Exp {a.experimentNumber}</span>
+                              {(() => {
+                                const statusInfo = getAssignmentChecklistStatus(a);
+                                return (
+                                  <Badge variant={statusInfo.variant} className="px-2 py-0.5 text-[10px] font-bold">
+                                    {statusInfo.label}
+                                  </Badge>
+                                );
+                              })()}
                               {a.priority === 'high' && !isCompleted && (
                                 <span className="w-2 h-2 rounded-full bg-red-500" title="High Priority" />
                               )}

@@ -23,8 +23,8 @@ import {
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
 import { SubjectFormModal } from '@/components/subjects/SubjectFormModal';
 import { ConfirmationDialog } from '@/components/ui/ConfirmationDialog';
-import { WORKFLOW_STAGE_LABELS, WorkflowStage, Assignment } from '@/types';
-import { formatDate, getDaysRemaining, cn } from '@/utils';
+import { WorkflowStage, Assignment } from '@/types';
+import { formatDate, getDaysRemaining, cn, getAssignmentChecklistStatus } from '@/utils';
 
 export function SubjectDetail() {
   const { id } = useParams();
@@ -123,26 +123,6 @@ export function SubjectDetail() {
     );
   }
 
-  const getStatusBadgeVariant = (status: WorkflowStage) => {
-    switch (status) {
-      case 'NOT_STARTED':
-        return 'default';
-      case 'IN_PROGRESS':
-        return 'indigo';
-      case 'READY_FOR_UPLOAD':
-        return 'warning';
-      case 'UPLOADED':
-        return 'indigo';
-      case 'FACULTY_CHECKING':
-        return 'purple';
-      case 'CORRECTION_REQUIRED':
-        return 'error';
-      case 'COMPLETED':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
 
   const handleDeleteSubject = () => {
     deleteSubject(subject.id);
@@ -546,12 +526,17 @@ export function SubjectDetail() {
                         </p>
                       </div>
 
-                      {/* Status badge */}
-                      <div className="w-28 sm:w-36 flex justify-end">
-                        <Badge variant={getStatusBadgeVariant(assignment.status)} className="text-[11px] font-bold">
-                          {WORKFLOW_STAGE_LABELS[assignment.status]}
-                        </Badge>
-                      </div>
+                      {/* Status badge: Shows the next thing left from the assignment checklist */}
+                      {(() => {
+                        const statusInfo = getAssignmentChecklistStatus(assignment);
+                        return (
+                          <div className="w-32 sm:w-44 flex justify-end">
+                            <Badge variant={statusInfo.variant} className="text-[11px] font-bold">
+                              {statusInfo.label}
+                            </Badge>
+                          </div>
+                        );
+                      })()}
 
                       {/* Action buttons */}
                       <div className="flex items-center gap-1.5">
