@@ -4,12 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/Button';
 import { MagicBentoGrid } from '@/components/ui/MagicBento';
 import { Plus, CheckCircle2 } from 'lucide-react';
-import { getDaysRemaining } from '@/utils';
 import { ExperimentFormModal } from '@/components/assignments/ExperimentFormModal';
 import {
   DashboardHeader,
-  ActionRequiredCard,
-  AcademicProgressCard,
+  ChecklistFilterCard,
   WorkflowDistributionCard,
   UpcomingDeadlinesCard,
   CoursesSnapshotCard,
@@ -19,17 +17,6 @@ export function Dashboard() {
   const { assignments, subjects } = useStore();
   const { user } = useAuth();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-
-  const attentionNeeded = assignments
-    .filter(
-      (a) =>
-        a.status === 'CORRECTION_REQUIRED' ||
-        a.status === 'READY_FOR_UPLOAD' ||
-        (getDaysRemaining(a.dueDate) <= 3 &&
-          a.status !== 'COMPLETED' &&
-          a.status !== 'FACULTY_CHECKING')
-    )
-    .sort((a, b) => getDaysRemaining(a.dueDate) - getDaysRemaining(b.dueDate));
 
   const studentName = user?.name || 'Neev';
 
@@ -63,19 +50,16 @@ export function Dashboard() {
       ) : (
         /* 2. Premium React Bits Magic Bento Grid Layout */
         <MagicBentoGrid>
-          {/* Bento Card 1: Urgent Actions Needed (2 columns) */}
-          <ActionRequiredCard assignments={attentionNeeded} subjects={subjects} />
+          {/* Top Bento Card: Checklist Workflow Hub with 6-stage checklist filters (replaces Action Required & Semester Momentum) */}
+          <ChecklistFilterCard assignments={assignments} subjects={subjects} />
 
-          {/* Bento Card 2: Academic Completion Momentum */}
-          <AcademicProgressCard assignments={assignments} />
-
-          {/* Bento Card 3: 6-Stage Submission Linear Pipeline (2 columns) */}
+          {/* Bento Card 2: 6-Stage Submission Linear Pipeline (2 columns) */}
           <WorkflowDistributionCard assignments={assignments} />
 
-          {/* Bento Card 4: Upcoming 7-day deadlines with calendar chips */}
+          {/* Bento Card 3: Upcoming 7-day deadlines with calendar chips */}
           <UpcomingDeadlinesCard assignments={assignments} subjects={subjects} />
 
-          {/* Bento Card 5: Courses Snapshot with mini progress meters (3 columns) */}
+          {/* Bento Card 4: Courses Snapshot with mini progress meters (3 columns) */}
           {subjects.length > 0 && (
             <CoursesSnapshotCard subjects={subjects} assignments={assignments} />
           )}
