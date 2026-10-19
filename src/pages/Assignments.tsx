@@ -61,9 +61,6 @@ export function Assignments() {
                         <span className="text-xs sm:text-sm font-semibold text-slate-500 truncate">{subject?.name}</span>
                         <span className="text-sm text-slate-400">•</span>
                         <span className="text-xs sm:text-sm font-medium text-slate-900 shrink-0">Exp {a.experimentNumber}</span>
-                        {a.priority === 'high' && (
-                          <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 ml-1">HIGH</span>
-                        )}
                       </div>
                       <h3 className="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-[var(--color-primary)] transition-colors line-clamp-2">{a.title}</h3>
                     </div>

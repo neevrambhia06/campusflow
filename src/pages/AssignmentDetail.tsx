@@ -118,7 +118,7 @@ export function AssignmentDetail() {
         totalCount={TOTAL_CHECKLIST_ITEMS}
         prevAssignment={prevAssignment}
         nextAssignment={nextAssignment}
-        onBack={() => navigate(-1)}
+        onBack={() => navigate('/assignments')}
         onEdit={() => setIsEditExpOpen(true)}
         onDelete={() => setIsDeleteExpOpen(true)}
         onMarkAllCompleted={handleMarkAllCompleted}

@@ -35,14 +35,14 @@ export function AssignmentHeader({
     <div className="space-y-4">
       {/* Top Navigation Row: Back Button & Next/Prev Quick Switches */}
       <div className="flex items-center justify-between gap-4">
-        <button
-          type="button"
+        <Link
+          to="/assignments"
           onClick={onBack}
-          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors"
+          className="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-900 transition-colors group"
         >
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" />
           <span>Back to Assignments</span>
-        </button>
+        </Link>
 
         <div className="flex items-center gap-2">
           {prevAssignment && (

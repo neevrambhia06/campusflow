@@ -83,9 +83,6 @@ export function CalendarPage() {
                                   </Badge>
                                 );
                               })()}
-                              {a.priority === 'high' && !isCompleted && (
-                                <span className="w-2 h-2 rounded-full bg-red-500" title="High Priority" />
-                              )}
                             </div>
                             <h3 className="text-base sm:text-lg font-bold text-slate-900 line-clamp-2">{a.title}</h3>
                           </div>

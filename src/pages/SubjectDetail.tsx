@@ -474,12 +474,6 @@ export function SubjectDetail() {
                           >
                             Exp {assignment.experimentNumber}: {assignment.title}
                           </Link>
-
-                          {assignment.priority === 'high' && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-100 text-red-700 shrink-0">
-                              HIGH PRIORITY
-                            </span>
-                          )}
                         </div>
 
                         {assignment.description ? (

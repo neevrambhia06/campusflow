@@ -3,7 +3,7 @@ import { useStore, ALL_SEMESTERS } from '@/store/useStore';
 import { useToast } from '@/store/useToast';
 import { Button } from '@/components/ui/Button';
 import { X } from 'lucide-react';
-import { Assignment, Priority } from '@/types';
+import { Assignment } from '@/types';
 
 interface ExperimentFormModalProps {
   isOpen: boolean;
@@ -26,7 +26,6 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
   const [faculty, setFaculty] = useState('');
   const [releaseDate, setReleaseDate] = useState('');
   const [dueDate, setDueDate] = useState('');
-  const [priority, setPriority] = useState<Priority>('medium');
   const [notes, setNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -43,7 +42,6 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         setFaculty(assignmentToEdit.faculty || '');
         setReleaseDate(assignmentToEdit.releaseDate);
         setDueDate(assignmentToEdit.dueDate);
-        setPriority(assignmentToEdit.priority);
         setNotes(assignmentToEdit.notes || '');
       } else {
         setSemester(preselectedSemester || '');
@@ -55,7 +53,6 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         setFaculty('');
         setReleaseDate('');
         setDueDate('');
-        setPriority('medium');
         setNotes('');
       }
       setErrors({});
@@ -98,7 +95,6 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         faculty,
         releaseDate,
         dueDate,
-        priority,
         notes,
       });
       addToast("Experiment updated successfully.");
@@ -113,7 +109,7 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
         faculty,
         releaseDate,
         dueDate,
-        priority,
+        priority: 'medium',
         notes,
         status: 'NOT_STARTED',
         checklist: {
@@ -243,7 +239,7 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-1">Release Date</label>
                   <input 
@@ -261,18 +257,6 @@ export function ExperimentFormModal({ isOpen, onClose, assignmentToEdit, presele
                     onChange={e => setDueDate(e.target.value)}
                     className="w-full rounded-md border border-slate-200 p-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1">Priority</label>
-                  <select 
-                    value={priority} 
-                    onChange={e => setPriority(e.target.value as Priority)}
-                    className="w-full rounded-md border border-slate-200 p-2 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
                 </div>
               </div>
 
