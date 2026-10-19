@@ -5,7 +5,6 @@ import {
   ChevronDown, 
   ChevronRight, 
   CheckCircle2, 
-  ExternalLink, 
   Trash2, 
   Plus 
 } from 'lucide-react';
@@ -34,9 +33,9 @@ export function BranchedMenu({
 
   return (
     <div className={`relative ${className}`}>
-      {/* Root Node: Subject Card Row */}
-      <div
-        onClick={() => setIsExpanded(!isExpanded)}
+      {/* Root Node: Subject Card Row - Clicking takes user directly to Subject page */}
+      <Link
+        to={`/subjects/${subject.id}`}
         className="flex items-center justify-between p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200/90 shadow-xs hover:shadow-md hover:border-indigo-300 transition-all cursor-pointer select-none group"
       >
         <div className="flex items-center gap-3 min-w-0">
@@ -83,22 +82,12 @@ export function BranchedMenu({
             </div>
           </div>
 
-          {/* Quick "View Subject Page" Link */}
-          <Link
-            to={`/subjects/${subject.id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200 text-xs font-bold text-slate-600 transition-colors shadow-2xs"
-            title="Open Dedicated Subject Page"
-          >
-            <span>Subject Page</span>
-            <ExternalLink className="h-3 w-3" />
-          </Link>
-
           {/* Delete Subject Button */}
           {onDeleteSubject && (
             <button
               type="button"
               onClick={(e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 onDeleteSubject(subject);
               }}
@@ -110,15 +99,25 @@ export function BranchedMenu({
           )}
 
           {/* Expand / Collapse Chevron */}
-          <div className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 group-hover:text-slate-700 group-hover:bg-slate-100 transition-colors">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsExpanded(!isExpanded);
+            }}
+            title={isExpanded ? 'Collapse experiments' : 'Expand experiments'}
+            aria-label={isExpanded ? 'Collapse experiments' : 'Expand experiments'}
+            className="w-8 h-8 rounded-lg bg-slate-50 flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+          >
             {isExpanded ? (
               <ChevronDown className="h-4 w-4" />
             ) : (
               <ChevronRight className="h-4 w-4" />
             )}
-          </div>
+          </button>
         </div>
-      </div>
+      </Link>
 
       {/* Branching Lines & Child Experiment Nodes */}
       {isExpanded && (
@@ -233,14 +232,9 @@ export function BranchedMenu({
                       <span>Add Experiment</span>
                     </button>
                   )}
-
-                  <Link
-                    to={`/subjects/${subject.id}`}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition-colors ml-auto px-2 py-1"
-                  >
-                    <span>View all {assignments.length} experiments on Subject Page</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </Link>
+                  <span className="text-[11px] font-semibold text-slate-400 ml-auto px-2">
+                    {assignments.length} experiments
+                  </span>
                 </div>
               </div>
             </>
@@ -261,24 +255,16 @@ export function BranchedMenu({
                 </svg>
                 <div className="flex-1 p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3">
                   <span>No experiments created for this subject yet.</span>
-                  <div className="flex items-center gap-2">
-                    {onAddExperiment && (
-                      <button
-                        type="button"
-                        onClick={() => onAddExperiment(subject)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors shadow-2xs"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                        <span>Add Exp #1</span>
-                      </button>
-                    )}
-                    <Link
-                      to={`/subjects/${subject.id}`}
-                      className="text-xs font-semibold text-indigo-600 hover:underline"
+                  {onAddExperiment && (
+                    <button
+                      type="button"
+                      onClick={() => onAddExperiment(subject)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition-colors shadow-2xs"
                     >
-                      Open Subject Page
-                    </Link>
-                  </div>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Add Exp #1</span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

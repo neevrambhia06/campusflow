@@ -10,7 +10,6 @@ import {
   Edit, 
   Trash2, 
   Calendar, 
-  ChevronRight, 
   Search, 
   BookOpen, 
   CheckCircle2, 
@@ -445,9 +444,10 @@ export function SubjectDetail() {
                 const isCompleted = assignment.status === 'COMPLETED';
 
                 return (
-                  <div
+                  <Link
                     key={assignment.id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-slate-50/80 transition-colors group gap-4"
+                    to={`/assignments/${assignment.id}`}
+                    className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:p-5 hover:bg-slate-50/80 transition-colors group gap-4 cursor-pointer"
                   >
                     {/* Left: Experiment Avatar & Info */}
                     <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
@@ -468,12 +468,9 @@ export function SubjectDetail() {
 
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <Link
-                            to={`/assignments/${assignment.id}`}
-                            className="text-sm sm:text-base font-bold text-slate-900 hover:text-indigo-600 transition-colors line-clamp-1"
-                          >
+                          <span className="text-sm sm:text-base font-bold text-slate-900 group-hover:text-indigo-600 transition-colors line-clamp-1">
                             Exp {assignment.experimentNumber}: {assignment.title}
-                          </Link>
+                          </span>
                         </div>
 
                         {assignment.description ? (
@@ -532,27 +529,21 @@ export function SubjectDetail() {
                         );
                       })()}
 
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-1.5">
-                        <Link
-                          to={`/assignments/${assignment.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-indigo-50 hover:text-indigo-600 text-xs font-bold text-slate-700 transition-colors shadow-2xs"
-                        >
-                          <span>Open</span>
-                          <ChevronRight className="h-3.5 w-3.5" />
-                        </Link>
-
-                        <button
-                          type="button"
-                          onClick={() => setExperimentToDelete(assignment)}
-                          title="Delete Experiment"
-                          className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      {/* Delete Experiment Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setExperimentToDelete(assignment);
+                        }}
+                        title="Delete Experiment"
+                        className="p-1.5 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  </div>
+                  </Link>
                 );
               })}
             </div>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BookOpen, Trash2, ChevronRight } from 'lucide-react';
+import { BookOpen, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Subject, Assignment } from '@/types';
 import { cn } from '@/utils';
@@ -103,11 +103,6 @@ export function SubjectCard({ subject, assignments, onDeleteSubject }: SubjectCa
                 </p>
                 <p className="text-base font-bold text-emerald-600">{completed}</p>
               </div>
-            </div>
-
-            <div className="pt-2 flex items-center justify-between text-xs font-bold text-indigo-600 group-hover:text-indigo-700">
-              <span>View Experiments</span>
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </div>
           </div>
         </CardContent>

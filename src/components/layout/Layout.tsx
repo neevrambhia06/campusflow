@@ -1,4 +1,4 @@
-import { Outlet, Link } from 'react-router-dom';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { ToastContainer } from '../ui/ToastContainer';
@@ -6,11 +6,21 @@ import { useLayoutStore } from '@/store/useLayoutStore';
 import { useStore } from '@/store/useStore';
 import { PanelTopOpen, Menu, PanelLeftOpen, Database } from 'lucide-react';
 import { cn } from '@/utils';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 export function Layout() {
   const { syncStatus } = useStore();
   const [isBannerDismissed, setIsBannerDismissed] = useState(false);
+  const location = useLocation();
+  const mainRef = useRef<HTMLElement>(null);
+
+  // Immediately scroll the main container to the top on every route change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTop = 0;
+    }
+  }, [location.pathname, location.search]);
+
   const { 
     isTopbarHidden, 
     toggleTopbarHidden, 
@@ -96,11 +106,14 @@ export function Layout() {
         )}
 
         {/* Page Content with Mobile-Friendly Responsive Padding */}
-        <main className={cn(
-          "flex-1 overflow-y-auto relative transition-all",
-          "p-4 sm:p-6 lg:p-8",
-          isTopbarHidden && "pt-12 sm:pt-14"
-        )}>
+        <main
+          ref={mainRef}
+          className={cn(
+            "flex-1 overflow-y-auto relative transition-all",
+            "p-4 sm:p-6 lg:p-8",
+            isTopbarHidden && "pt-12 sm:pt-14"
+          )}
+        >
           <div className="mx-auto max-w-6xl animate-fade-in">
             <Outlet />
           </div>

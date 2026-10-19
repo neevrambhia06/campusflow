@@ -4,7 +4,6 @@ import {
   ListChecks, 
   CheckCircle2, 
   ArrowRight, 
-  ChevronRight, 
   Calendar 
 } from 'lucide-react';
 import { MagicBentoCard } from '@/components/ui/MagicBento';
@@ -242,7 +241,7 @@ export function ChecklistFilterCard({ assignments, subjects }: ChecklistFilterCa
                       </Badge>
                     </div>
 
-                    {/* Bottom Row: Due Date + Open Button */}
+                    {/* Bottom Row: Due Date & Days Remaining */}
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
                       <div className="flex items-center gap-1.5 text-slate-500 font-medium">
                         <Calendar className="h-3.5 w-3.5 text-slate-400" />
@@ -268,11 +267,6 @@ export function ChecklistFilterCard({ assignments, subjects }: ChecklistFilterCa
                             ? 'Due Today'
                             : `${daysLeft}d left`}
                         </span>
-                      </div>
-
-                      <div className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-600 group-hover:translate-x-0.5 transition-transform">
-                        <span>Open</span>
-                        <ChevronRight className="h-3 w-3" />
                       </div>
                     </div>
                   </Link>
